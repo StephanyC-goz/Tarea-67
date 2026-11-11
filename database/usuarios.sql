@@ -1,0 +1,23 @@
+CREATE DATABASE IF NOT EXISTS aula3d CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE aula3d;
+CREATE TABLE IF NOT EXISTS users (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ full_name VARCHAR(100) NOT NULL,
+ email VARCHAR(190) NOT NULL UNIQUE,
+ password_hash VARCHAR(255) NOT NULL,
+ role ENUM('admin','alumno','visitante') NOT NULL DEFAULT 'visitante',
+ is_active TINYINT(1) NOT NULL DEFAULT 1,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ last_login_at DATETIME NULL,
+ INDEX idx_users_role(role,is_active)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS access_logs (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ user_id BIGINT UNSIGNED NULL,
+ event VARCHAR(50) NOT NULL,
+ detail VARCHAR(150) NOT NULL DEFAULT '',
+ ip_address VARCHAR(45) NOT NULL DEFAULT '',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ INDEX idx_access_user(user_id,created_at),
+ CONSTRAINT fk_access_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
