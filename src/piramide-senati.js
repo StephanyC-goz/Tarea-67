@@ -178,25 +178,25 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
         box(atriumGroup,.055,1.14,.043,x,low+.57,z,skylightBorder,false);
     }
   }
-  // Núcleo al fondo del eje largo del atrio (fotos interiores, noviembre 2026).
+  // Núcleo en el extremo opuesto del eje largo del atrio, según corrección del usuario.
   // La orientación y proporciones son interpretativas, no cotas del edificio real.
   const coreZ=(atrium.z0+atrium.z1)/2;
   const coreWidth=(atrium.z1-atrium.z0)*.80;
-  const core={x0:atrium.x1-1.80*scaleX,x1:atrium.x1-.20*scaleX,
+  const core={x0:atrium.x0+.20*scaleX,x1:atrium.x0+1.80*scaleX,
     z0:coreZ-coreWidth/2,z1:coreZ+coreWidth/2};
   const coreX=(core.x0+core.x1)/2,coreH=H-.35;
   const brownConcrete=standard(0x756a60,.94);
-  const coreFace=core.x0-.035;
+  const coreFace=core.x1+.035;
   box(atriumGroup,core.x1-core.x0,coreH,coreWidth,coreX,coreH/2,coreZ,brownConcrete,false);
   // Banda gris continua y rejillas visibles desde el vestíbulo.
   box(atriumGroup,.07,coreH,coreWidth*.32,coreFace,coreH/2,coreZ,coreConcrete,false);
   const ventFrame=standard(0xc7c9c5,.65),ventDark=standard(0x5b6465,.89);
   for(const y of [coreH*.29,coreH*.84]){
-    box(atriumGroup,.025,.34,.43,core.x0-.082,y,coreZ,ventFrame,false);
-    for(let i=0;i<7;i++)box(atriumGroup,.028,.017,.34,core.x0-.098,y-.112+i*.037,coreZ,ventDark,false);
+    box(atriumGroup,.025,.34,.43,core.x1+.082,y,coreZ,ventFrame,false);
+    for(let i=0;i<7;i++)box(atriumGroup,.028,.017,.34,core.x1+.098,y-.112+i*.037,coreZ,ventDark,false);
   }
   for(let f=0;f<levels;f++){
-    floorWallBoxes[f].push({...core,x0:core.x0-.115});
+    floorWallBoxes[f].push({...core,x1:core.x1+.115});
   }
   const wallX=(g,x,z0,z1,y,h=wallHeight)=>{
     if(z1-z0>.04)box(g,wallThickness,h,z1-z0,x,y+h/2,(z0+z1)/2,roomWall,false);
@@ -263,7 +263,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     placeFloorLabel(floor,'PASADIZO AL TRAGALUZ',atrium.x1+2.2,(corridorBack+corridorFront)/2,3.9,'#246a61',base+.108);
     if(f===0){
       box(floor,atrium.x1-atrium.x0,.024,atrium.z1-atrium.z0,(atrium.x0+atrium.x1)/2,base+.101,(atrium.z0+atrium.z1)/2,standard(0xd5d4cf,.88),false);
-      placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',(atrium.x0+core.x0)/2,.40,Math.min(5.0,core.x0-atrium.x0-.3),'#246a61',base+.131);
+      placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',(core.x1+atrium.x1)/2,.40,Math.min(5.0,atrium.x1-core.x1-.3),'#246a61',base+.131);
     }else{
       // El centro es un hueco: la etiqueta se coloca en suelo FIRME junto a la baranda.
       placeFloorLabel(floor,'ATRIO ABIERTO · PISO '+(f+1),atrium.x1+3.25,0,4.8,'#246a61',base+.108);
