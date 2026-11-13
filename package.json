@@ -1,0 +1,17 @@
+{
+  "name": "piramide-senati-editor-fusion",
+  "version": "11.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v10.mjs && node scripts/verificar-v11.mjs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "vite": "6.4.1"
+  }
+}

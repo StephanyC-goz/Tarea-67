@@ -1,0 +1,13 @@
+PIRÁMIDE SENATI V4 - VALIDACIÓN DEL CÓDIGO FUENTE
+
+- Comprobación estática npm run check: correcta.
+- Lint PHP: correcto para todos los PHP del proyecto.
+- Sintaxis JavaScript: correcta.
+- Prueba de rutas HTTP con PHP local: login/registro 200; páginas protegidas 302; API sin sesión 401.
+- Autenticación / permisos PHP: controles programados. No se probaron con MySQL real en este entorno.
+- Geometría corregida: losas recortadas para el hueco de escalera, escalera con peldaños y barandas, portal con hojas interactivas.
+- Recorrido: colisiones de perímetro y objetos, transición de altura de pisos, apertura de entrada mediante E, escenarios alternables.
+- Vite NO pudo instalar dependencias por falta de conexión con registry.npmjs.org en este entorno. No se comprobó renderizado WebGL ni se incluye frontend compilado.
+
+Instala en tu equipo: npm install && npm run build
+Importa database/usuarios.sql si ya tienes aula3d, o database/schema.sql si es instalación nueva.

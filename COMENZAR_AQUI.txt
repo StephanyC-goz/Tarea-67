@@ -1,0 +1,16 @@
+PIRÁMIDE SENATI V10 — PROPORCIONES CORREGIDAS (6 PISOS)
+
+MEJORA PRINCIPAL: se eliminó el estiramiento 3D de la V9. El ancho y
+fondo siguen siendo un MODELO DE REFERENCIA de 56 × 38 m, pero las
+puertas, escaleras, ascensor y ventanas ya no se deforman por escala.
+
+1. Conserva una copia de tu carpeta anterior y de la base de datos aula3d.
+2. Extrae el ZIP sobre C:\laragon\www\ (sin carpetas dobles).
+3. En el proyecto: npm install; npm run check; npm run build.
+4. Abre en navegador (F5 / Ctrl+F5 para forzar recarga):
+   http://localhost/piramide_senati_fusion/login.php
+5. Abre el editor y haz clic en la plantilla Pirámide SENATI V10.
+6. Visor: http://localhost/piramide_senati_fusion/VISTA_DIMENSIONES_V10.html
+
+No es necesario volver a importar MySQL. Las medidas no son oficiales.
+No se han probado las escenas en un navegador con WebGL en este entorno.
