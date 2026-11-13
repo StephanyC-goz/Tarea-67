@@ -178,13 +178,25 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
         box(atriumGroup,.055,1.14,.043,x,low+.57,z,skylightBorder,false);
     }
   }
-  // Huella del núcleo central que se aprecia al fondo del patio de luz
-  // en la fotografía, sin ocupar todo el vano (permite ver el vacío lateral).
-  const core={x0:-1.65*scaleX,x1:1.65*scaleX,z0:atrium.z0+.32*scaleZ,z1:atrium.z0+1.82*scaleZ};
-  const coreX=(core.x0+core.x1)/2,coreZ=(core.z0+core.z1)/2;
-  box(atriumGroup,core.x1-core.x0,H+.20,core.z1-core.z0,coreX,(H+.20)/2,coreZ,coreConcrete,false);
+  // Núcleo al fondo del eje largo del atrio (fotos interiores, noviembre 2026).
+  // La orientación y proporciones son interpretativas, no cotas del edificio real.
+  const coreZ=(atrium.z0+atrium.z1)/2;
+  const coreWidth=(atrium.z1-atrium.z0)*.80;
+  const core={x0:atrium.x1-1.80*scaleX,x1:atrium.x1-.20*scaleX,
+    z0:coreZ-coreWidth/2,z1:coreZ+coreWidth/2};
+  const coreX=(core.x0+core.x1)/2,coreH=H-.35;
+  const brownConcrete=standard(0x756a60,.94);
+  const coreFace=core.x0-.035;
+  box(atriumGroup,core.x1-core.x0,coreH,coreWidth,coreX,coreH/2,coreZ,brownConcrete,false);
+  // Banda gris continua y rejillas visibles desde el vestíbulo.
+  box(atriumGroup,.07,coreH,coreWidth*.32,coreFace,coreH/2,coreZ,coreConcrete,false);
+  const ventFrame=standard(0xc7c9c5,.65),ventDark=standard(0x5b6465,.89);
+  for(const y of [coreH*.29,coreH*.84]){
+    box(atriumGroup,.025,.34,.43,core.x0-.082,y,coreZ,ventFrame,false);
+    for(let i=0;i<7;i++)box(atriumGroup,.028,.017,.34,core.x0-.098,y-.112+i*.037,coreZ,ventDark,false);
+  }
   for(let f=0;f<levels;f++){
-    floorWallBoxes[f].push({...core});
+    floorWallBoxes[f].push({...core,x0:core.x0-.115});
   }
   const wallX=(g,x,z0,z1,y,h=wallHeight)=>{
     if(z1-z0>.04)box(g,wallThickness,h,z1-z0,x,y+h/2,(z0+z1)/2,roomWall,false);
@@ -251,7 +263,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     placeFloorLabel(floor,'PASADIZO AL TRAGALUZ',atrium.x1+2.2,(corridorBack+corridorFront)/2,3.9,'#246a61',base+.108);
     if(f===0){
       box(floor,atrium.x1-atrium.x0,.024,atrium.z1-atrium.z0,(atrium.x0+atrium.x1)/2,base+.101,(atrium.z0+atrium.z1)/2,standard(0xd5d4cf,.88),false);
-      placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',4.2,.40,5.0,'#246a61',base+.131);
+      placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',(atrium.x0+core.x0)/2,.40,Math.min(5.0,core.x0-atrium.x0-.3),'#246a61',base+.131);
     }else{
       // El centro es un hueco: la etiqueta se coloca en suelo FIRME junto a la baranda.
       placeFloorLabel(floor,'ATRIO ABIERTO · PISO '+(f+1),atrium.x1+3.25,0,4.8,'#246a61',base+.108);
@@ -297,14 +309,26 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const elevator=lift;
   const corridorBounds={left:X(-8.70*56/34),right:X(8.45*56/34),back:Z(-3.15*38/20),front:Z(2.30*38/20)};
 
-  // V11: la azotea también tiene un VANO REAL: cuatro bordes que rodean
-  // el atrio. No se dibuja una tapa de vidrio que cierre el tragaluz.
+  // La azotea conserva el vano real; solo se cubre con paños de vidrio y marcos.
   const roofBounds={left:centerX-1.7-(facadeWidth+6.8)/2,right:centerX-1.7+(facadeWidth+6.8)/2,back:-(baseDepth-2.1)/2-.10,front:(baseDepth-2.1)/2-.10};
   makeSlab(H+.15,true,roof,.45,roofBounds,concreteLight);
   for(const z of [atrium.z0,atrium.z1])
     box(roof,atrium.x1-atrium.x0+.32,.24,.17,(atrium.x0+atrium.x1)/2,H+.50,z,skylightBorder,false);
   for(const x of [atrium.x0,atrium.x1])
     box(roof,.17,.24,atrium.z1-atrium.z0+.32,x,H+.50,(atrium.z0+atrium.z1)/2,skylightBorder,false);
+  const skyGlass=new THREE.MeshPhysicalMaterial({color:0xd9e8ed,transparent:true,
+    opacity:.28,roughness:.23,depthWrite:false,side:THREE.DoubleSide});
+  const aw=atrium.x1-atrium.x0,ad=atrium.z1-atrium.z0;
+  const ax=(atrium.x0+atrium.x1)/2,az=(atrium.z0+atrium.z1)/2;
+  const skylight=new THREE.Group();skylight.name='Tragaluz acristalado · retícula metálica';roof.add(skylight);
+  const cols=8,rows=3;
+  const paneW=aw/cols,paneD=ad/rows;
+  for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
+    box(skylight,Math.max(.005,paneW-.075),.035,Math.max(.005,paneD-.075),
+      atrium.x0+(i+.5)*paneW,H+.52,atrium.z0+(j+.5)*paneD,skyGlass,false);
+  }
+  for(let i=1;i<cols;i++)box(skylight,.075,.11,ad,atrium.x0+i*paneW,H+.55,az,skylightBorder,false);
+  for(let j=1;j<rows;j++)box(skylight,aw,.11,.075,ax,H+.55,atrium.z0+j*paneD,skylightBorder,false);
   const signY=H+2.02;
   const billboardWidth=Math.min(31,facadeWidth*.78);
   box(shell,billboardWidth,3.65,.30,centerX,signY,front+.20,blue);
