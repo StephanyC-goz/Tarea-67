@@ -1,0 +1,13 @@
+SENATI 3D V5 - RESULTADOS DE VALIDACIÓN
+
+PASS: Sintaxis de src/editor.js, simulator.js, recorrer.js y piramide-senati.js
+PASS: Sintaxis de archivos PHP (login, registro, admin, editor, simulador, recorrido)
+PASS: Controles HTML necesarios para la interacción con PC y sillas
+PASS: Demo de simulador implementada en código como fallback sin escenarios guardados
+PASS: Puertas de aulas, paredes, pizarra y mesa docente por piso implementadas en el modelo
+PASS: Techo visible en la plantilla principal y opcionalmente ocultable
+PASS: Control de acceso HTTP básico con servidor PHP local: login 200, registro 200, páginas privadas 302 sin sesión, API 401 sin sesión
+NO VERIFICADO: Render final WebGL en navegador, trayectorias precisas sobre escaleras, funcionamiento MySQL y compilación Vite (npm registry no accesible por red en este entorno)
+
+Para compilar: npm install; npm run build.
+Para realizar una prueba estática: node scripts/verificar-v5.cjs
