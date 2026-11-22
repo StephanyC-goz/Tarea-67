@@ -59,7 +59,36 @@ const ROOM_LABELS=[
  * Convierte croquis normalizado a metros de la huella actual del edificio.
  * Mantiene huecos en las puertas y devuelve objetos consumibles por Three.js.
  */
-export function getFirstFloorFrontPlan(bounds){
+function clipWallsOutsideCores(walls,cores=[]){
+  const pad=.15;
+  let result=walls;
+  for(const core of cores){
+    result=result.flatMap(segment=>{
+      const vertical=segment.axis==='x';
+      const fixed=vertical?segment.x0:segment.z0;
+      const low=vertical?core.xMin-pad:core.zTop-pad;
+      const high=vertical?core.xMax+pad:core.zBottom+pad;
+      if(fixed<low || fixed>high)return [segment];
+      const from=vertical?segment.z0:segment.x0;
+      const to=vertical?segment.z1:segment.x1;
+      const cutFrom=vertical?core.zTop-pad:core.xMin-pad;
+      const cutTo=vertical?core.zBottom+pad:core.xMax+pad;
+      if(to<=cutFrom || from>=cutTo)return [segment];
+      const pieces=[];
+      const make=(a,b)=>{
+        if(b-a<.12)return;
+        pieces.push(vertical?
+          {...segment,z0:a,z1:b}:{...segment,x0:a,x1:b});
+      };
+      make(from,Math.min(to,cutFrom));
+      make(Math.max(from,cutTo),to);
+      return pieces;
+    });
+  }
+  return result;
+}
+
+export function getFirstFloorFrontPlan(bounds,coreKeepouts=[]){
   if(!(bounds.left<bounds.right && bounds.back<bounds.front))
     throw new Error('Límites inválidos del primer piso');
   // Ligero margen para no duplicar la envolvente exterior existente.
@@ -72,6 +101,7 @@ export function getFirstFloorFrontPlan(bounds){
     if(ax===bx)return {axis:'x',x0:X(ax),x1:X(ax),z0:Z(ay),z1:Z(by)};
     throw new Error('El croquis contiene un muro no ortogonal');
   });
+  const protectedWalls=clipWallsOutsideCores(walls,coreKeepouts);
   const doors=GREEN_DOORS.map(({id,label,side,a,b})=>{
     const p0={x:X(a[0]),z:Z(a[1])},p1={x:X(b[0]),z:Z(b[1])};
     const width=side==='x'?Math.abs(p1.z-p0.z):Math.abs(p1.x-p0.x);
@@ -84,5 +114,5 @@ export function getFirstFloorFrontPlan(bounds){
     // La puerta principal ya existe en la fachada y se abre con E.
     source:'facade-existing'
   };
-  return {walls,doors,labels,entrance,source:'croquis-frontal-22-11-2026'};
+  return {walls:protectedWalls,doors,labels,entrance,source:'croquis-frontal-22-11-2026'};
 }
