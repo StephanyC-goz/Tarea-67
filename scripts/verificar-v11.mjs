@@ -34,7 +34,11 @@ assert(ground.some(p=>p.left<a.x0&&p.right>a.x1&&p.back<a.z0&&p.front>a.z1),'Pla
 const code=src('src/piramide-senati.js');
 assert(code.includes('makeSlab(base,f!==0)'), 'Piso 1 cerrado; pisos superiores perforados');
 assert(code.includes('if(f>0)addAtriumRailing(base,f)'), 'Barandas en pisos 2-6');
-assert(code.includes('floorWallBoxes[f].push(...sides)'), 'Barandas con colisión');
+assert(code.includes('floorWallBoxes[f].push({x0:x-.08,x1:x+.08,z0:a,z1:b})'), 'Tramos laterales de baranda con colisión');
+assert(code.includes('floorWallBoxes[f].push({x0,x1,z0:z-.08,z1:z+.08})'), 'Tramos transversales con colisión');
+assert(code.includes('addRailZ(x1,z0,core.z0)')&&code.includes('addRailZ(x1,core.z1,z1)'), 'Barandas interrumpidas ante el muro');
+assert(code.includes('const core={x0:atrium.x1-.82*scaleX,x1:atrium.x1'), 'Muro adosado al lado derecho del tragaluz');
+assert(code.includes('const coreWidth=(atrium.z1-atrium.z0)*.56'), 'Longitud del muro proporcional al croquis');
 assert(code.includes('makeSlab(H+.15,true,roof,.45,roofBounds,concreteLight)'), 'Techo perforado en el centro');
 assert(code.includes('target===roof?[atrium]:holes'), 'Techo no perfora huecos de escaleras/ascensor');
 for(const pathname of ['VISTA_DIMENSIONES_V11.html','referencias/tragaluz_atrio_referencia.jpg','src/atrium-geometry.js','assets/ev52-layout-public.js','INSTRUCCIONES_V11.md'])assert(existsSync(resolve(root,pathname)),`Incluye ${pathname}`);
