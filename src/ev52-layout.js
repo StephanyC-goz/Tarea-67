@@ -14,7 +14,7 @@ export const DEFAULT_LEVEL_HEIGHT=3.8;
 /**
  * V11: patio de luz vertical (hueco abierto), expresado en coordenadas reales
  * del módulo 56 × 38 m. No tapa el suelo de planta baja; se recortan las
- * losas de las plantas 2 a 6 y la cubierta. No procede de medidas certificadas.
+ * losas de las plantas 2 a 8 y la cubierta. No procede de medidas certificadas.
  * El pasillo frontal del aula superior conserva 2.44 m y el inferior 2.07 m.
  */
 export const EV52_ATRIUM=Object.freeze({
@@ -81,17 +81,20 @@ wallZ(utilityFront,-10.02*56/34,utilityX1);
 // Un espacio libre detrás del acceso; no colocar tabique atravesando la puerta.
 doors.push(Object.freeze({id:'servicios-izquierda',label:'Servicios',x:-10.70*56/34,z:utilityFront,side:'z'}));
 
-// Los núcleos de escalera ocupan huecos exclusivos, SIN tabiques del croquis atravesándolos.
-// El modelo usa tramos orientativos que conectan las seis plantas.
+// V12: dos escaleras laterales, separadas del tragaluz y junto a los salones.
+// El ancho libre de 2.80 m permite el paso simultáneo de dos personas en la maqueta.
 export const EV52_STAIRWELLS=Object.freeze([
-  Object.freeze({id:'escalera-1',name:'Escalera izquierda',x:-10.65*56/34,xMin:-11.75*56/34,xMax:-9.55*56/34,zTop:-2.30*38/20,zBottom:1.72*38/20}),
-  Object.freeze({id:'escalera-2',name:'Escalera derecha',x:10.50*56/34,xMin:9.40*56/34,xMax:11.60*56/34,zTop:-2.30*38/20,zBottom:1.72*38/20})
+  Object.freeze({id:'escalera-1',name:'Escalera izquierda',x:-14.60,xMin:-16.00,xMax:-13.20,zTop:-2.30*38/20,zBottom:1.72*38/20,clearWidth:2.80}),
+  Object.freeze({id:'escalera-2',name:'Escalera derecha',x:14.60,xMin:13.20,xMax:16.00,zTop:-2.30*38/20,zBottom:1.72*38/20,clearWidth:2.80})
 ]);
-// Hueco de ascensor al costado de la escalera derecha; es una maqueta de traslado
-// entre pisos, no un simulador físico ni un dispositivo de seguridad certificado.
-export const EV52_ELEVATOR=Object.freeze({
-  x:12.83*56/34,z:-.49*38/20,xMin:12.10*56/34,xMax:13.56*56/34,zTop:-1.15*38/20,zBottom:.18*38/20,accessZ:1.02*38/20
-});
+// Dos ascensores agrupados en el lateral derecho, junto a la franja de salones.
+// Ambos quedan fuera de la proyección del tragaluz y dentro de los límites del edificio.
+export const EV52_ELEVATORS=Object.freeze([
+  Object.freeze({id:'ascensor-1',name:'Ascensor 1',x:18.45,z:-.49*38/20,xMin:17.28,xMax:19.62,zTop:-1.15*38/20,zBottom:.18*38/20,accessZ:1.02*38/20}),
+  Object.freeze({id:'ascensor-2',name:'Ascensor 2',x:21.15,z:-.49*38/20,xMin:19.98,xMax:22.32,zTop:-1.15*38/20,zBottom:.18*38/20,accessZ:1.02*38/20})
+]);
+// Alias de compatibilidad para módulos que todavía usan un ascensor individual.
+export const EV52_ELEVATOR=EV52_ELEVATORS[0];
 export const EV52_WALL_SEGMENTS=Object.freeze(walls.map(w=>Object.freeze(w)));
 export const EV52_DOORS=Object.freeze(doors);
 
@@ -118,6 +121,7 @@ export function getPyramidDimensions(width=DEFAULT_PYRAMID_WIDTH,depth=DEFAULT_P
     atrium:{width:(EV52_ATRIUM.x1-EV52_ATRIUM.x0)*s.x,depth:(EV52_ATRIUM.z1-EV52_ATRIUM.z0)*s.z},
     staircase:{width:(EV52_STAIRWELLS[1].xMax-EV52_STAIRWELLS[1].xMin)*s.x,length:(EV52_STAIRWELLS[1].zBottom-EV52_STAIRWELLS[1].zTop)*s.z},
     elevator:{width:(EV52_ELEVATOR.xMax-EV52_ELEVATOR.xMin)*s.x,depth:(EV52_ELEVATOR.zBottom-EV52_ELEVATOR.zTop)*s.z},
+    elevators:EV52_ELEVATORS.map(e=>({id:e.id,x:e.x*s.x,z:e.z*s.z,width:(e.xMax-e.xMin)*s.x,depth:(e.zBottom-e.zTop)*s.z})),
     rooms:EV52_ROOMS.map(r=>({...r,width:(r.x1-r.x0)*s.x,depth:(r.z1-r.z0)*s.z}))
   };
 }
