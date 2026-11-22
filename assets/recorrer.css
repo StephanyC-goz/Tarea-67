@@ -14,3 +14,7 @@
 .pc-emblem{display:grid;place-items:center;width:74px;height:74px;background:#1257c8;border-radius:23px;color:#fff;font-size:47px;font-weight:900;margin:auto;transform:rotate(-7deg)}
 .pc-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:16px 0 22px}.pc-actions a{background:#0c5bd1;border-radius:10px;color:#fff;text-decoration:none;padding:12px 18px;font-weight:800}.pc-actions a:nth-child(2){background:#0e9fba}
 .pc-main small{color:#64748b}
+
+/* V12 - presencia multijugador */
+.multiplayer-status{max-width:min(34vw,360px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d8fbe8!important;background:#0b513ac9!important;font-weight:800}
+@media(max-width:760px){.viewer-bottom{gap:6px;left:8px;right:8px}.viewer-bottom>*{font-size:10px;padding:6px 8px}.multiplayer-status{max-width:34vw}}
