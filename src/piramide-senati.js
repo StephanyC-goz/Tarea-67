@@ -274,8 +274,8 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       // El centro es un hueco: la etiqueta se coloca en suelo FIRME junto a la baranda.
       placeFloorLabel(floor,'ATRIO ABIERTO · PISO '+(f+1),atrium.x1+3.25,0,4.8,'#246a61',base+.108);
     }
-    placeFloorLabel(floor,'ESCALERA A',stairsLayout[0].x,Z(2.7*38/20),2.40,'#475a70',base+.07);
-    placeFloorLabel(floor,'ESCALERA B',stairsLayout[1].x,Z(2.7*38/20),2.40,'#475a70',base+.07);
+    placeFloorLabel(floor,'ESCALERA A',stairsLayout[0].x,stairsLayout[0].zBottom+.80,2.40,'#475a70',base+.07);
+    placeFloorLabel(floor,'ESCALERA B',stairsLayout[1].x,stairsLayout[1].zBottom+.80,2.40,'#475a70',base+.07);
     for(let i=0;i<liftLayouts.length;i++){
       const lf=liftLayouts[i];
       placeFloorLabel(floor,`ASCENSOR ${i+1}`,lf.x,lf.accessZ+.20,1.85,'#126f7a',base+.075);
