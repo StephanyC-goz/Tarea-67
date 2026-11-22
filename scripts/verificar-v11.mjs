@@ -34,11 +34,13 @@ assert(ground.some(p=>p.left<a.x0&&p.right>a.x1&&p.back<a.z0&&p.front>a.z1),'Pla
 const code=src('src/piramide-senati.js');
 assert(code.includes('makeSlab(base,f!==0)'), 'Piso 1 cerrado; pisos superiores perforados');
 assert(code.includes('if(f>0)addAtriumRailing(base,f)'), 'Barandas en pisos 2-6');
-assert(code.includes('floorWallBoxes[f].push({x0:x-.08,x1:x+.08,z0:a,z1:b})'), 'Tramos laterales de baranda con colisión');
-assert(code.includes('floorWallBoxes[f].push({x0,x1,z0:z-.08,z1:z+.08})'), 'Tramos transversales con colisión');
-assert(code.includes('addRailZ(x1,z0,core.z0)')&&code.includes('addRailZ(x1,core.z1,z1)'), 'Barandas interrumpidas ante el muro');
-assert(code.includes('const core={x0:atrium.x1-.82*scaleX,x1:atrium.x1'), 'Muro adosado al lado derecho del tragaluz');
-assert(code.includes('const coreWidth=(atrium.z1-atrium.z0)*.56'), 'Longitud del muro proporcional al croquis');
+assert(code.includes('floorWallBoxes[f].push({x0:x-.08,x1:x+.08,z0:a,z1:b})'), 'Barandas laterales con colisión');
+assert(code.includes('floorWallBoxes[f].push({x0:a,x1:b,z0:z-.08,z1:z+.08})'), 'Barandas superior e inferior con colisión');
+assert(code.includes('addRailX(z0,x0,core.x0)')&&code.includes('addRailX(z0,core.x1,x1)'), 'Muro no atravesado por baranda superior');
+assert(code.includes('const coreWidth=(atrium.x1-atrium.x0)*.56'), 'Muro ocupa 56 % del ancho del atrio');
+assert(code.includes('const coreDepth=(atrium.z1-atrium.z0)*.07'), 'Muro sobresale 7 % hacia el atrio');
+assert(code.includes('z0:atrium.z0,z1:atrium.z0+coreDepth'), 'Muro adosado al borde superior del tragaluz');
+assert(code.includes('floorWallBoxes[f].push({...core,z0:core.z0-.115,z1:core.z1+.115})'), 'Muro con colisión');
 assert(code.includes('makeSlab(H+.15,true,roof,.45,roofBounds,concreteLight)'), 'Techo perforado en el centro');
 assert(code.includes('target===roof?[atrium]:holes'), 'Techo no perfora huecos de escaleras/ascensor');
 for(const pathname of ['VISTA_DIMENSIONES_V11.html','referencias/tragaluz_atrio_referencia.jpg','src/atrium-geometry.js','assets/ev52-layout-public.js','INSTRUCCIONES_V11.md'])assert(existsSync(resolve(root,pathname)),`Incluye ${pathname}`);
