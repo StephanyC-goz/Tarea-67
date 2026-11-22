@@ -79,7 +79,7 @@ $assetVersion = $frontendReady ? (string) max((int) filemtime($builtJs), (int) f
         <div class="sidebar-heading"><span class="eyebrow">PLANTILLAS</span><h2>Escenarios listos para usar</h2><p>Selecciona la Pirámide SENATI, un aula o un edificio genérico. Personaliza cada modelo en 3D.</p></div>
         <button class="scenario-card selected" id="pyramid-template" type="button">
           <span class="scenario-card-art pyramid-thumb"><img src="./referencias/senati_frontal.jpg" alt="Fotografía frontal de SENATI" loading="lazy"></span>
-          <span class="scenario-card-copy"><b>Pirámide · Dirección Nacional</b><small>6 pisos · aulas · 2 escaleras · ascensor didáctico</small><em>Crear maqueta 3D</em></span>
+          <span class="scenario-card-copy"><b>Pirámide · Dirección Nacional</b><small>8 pisos · aulas · 2 escaleras laterales · 2 ascensores didácticos</small><em>Crear maqueta 3D</em></span>
         </button>
         <button class="scenario-card" id="classroom-template">
           <span class="scenario-card-art"><span class="scenario-room-art"></span></span>
@@ -92,7 +92,7 @@ $assetVersion = $frontendReady ? (string) max((int) filemtime($builtJs), (int) f
         <button class="scenario-card scenario-card-blank" id="blank-template">
           <span class="scenario-blank-icon">＋</span><span class="scenario-card-copy"><b>Escenario vacío</b><small>Un espacio nuevo para diseñar desde cero</small><em>Crear escenario</em></span>
         </button>
-        <div class="scenario-help"><b>Consejo</b><span>Guarda tus escenarios para reutilizarlos y preparar diferentes prácticas de clase. <a href="VISTA_DIMENSIONES_V11.html" target="_blank" rel="noopener">Ver medidas y tragaluz de la Pirámide V11</a>.</span></div>
+        <div class="scenario-help"><b>Consejo</b><span>Guarda tus escenarios para reutilizarlos y preparar diferentes prácticas de clase. <a href="VISTA_DIMENSIONES_V12.html" target="_blank" rel="noopener">Ver medidas, dos escaleras y dos ascensores de la Pirámide V12</a>.</span></div>
       </div>
 
       <div class="left-tab-content" id="left-tab-properties">
@@ -173,7 +173,7 @@ $assetVersion = $frontendReady ? (string) max((int) filemtime($builtJs), (int) f
           </select>
         </label>
         <div class="color-grid"><label>Hormigón<input id="pyramid-facade-color" type="color" value="#afa59b"></label><label>Cartel<input id="pyramid-sign-color" type="color" value="#1251cb"></label></div>
-        <p class="pyramid-warning"><b>V11:</b> tragaluz central con hueco entre los pisos 2 a 6 y en la azotea, patio de luz en planta baja y barandas en niveles altos. Selecciona <b>«Fachada + plantas»</b> o <b>«Plantas y soportes»</b> para verlo. Geometría orientativa, no plano estructural real.</p>
+        <p class="pyramid-warning"><b>V12:</b> tragaluz central despejado, sin núcleos ni ascensores; 8 pisos, dos escaleras laterales y dos ascensores juntos junto a los salones. Barandas únicamente en el perímetro del vacío. Selecciona <b>«Fachada + plantas»</b> o <b>«Plantas y soportes»</b> para verlo. Geometría orientativa, no plano estructural real.</p>
         <div class="pyramid-reference-grid">
           <a href="./referencias/senati_frontal.jpg" target="_blank" rel="noopener"><img src="./referencias/senati_frontal.jpg" alt="Fotografía fachada frontal" loading="lazy">Frente</a>
           <a href="./referencias/senati_perspectiva.jpg" target="_blank" rel="noopener"><img src="./referencias/senati_perspectiva.jpg" alt="Fotografía perspectiva" loading="lazy">Perspectiva</a>
