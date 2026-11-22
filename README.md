@@ -1,6 +1,6 @@
 # Pirámide SENATI 3D — Versión V12
 
-**Empieza por [INSTRUCCIONES_V12.md](INSTRUCCIONES_V12.md).** Esta actualización incorpora **ocho pisos**, mantiene el espacio central como tragaluz libre, coloca **dos escaleras laterales de 2,8 m de ancho nominal** en extremos opuestos y agrupa **dos ascensores** en un mismo lateral junto a los salones. Incluye recorrido en primera persona y multijugador con avatares, nombres y posiciones sincronizadas mediante PHP/MySQL. Consulta el plano en [VISTA_DIMENSIONES_V12.html](VISTA_DIMENSIONES_V12.html).
+**Empieza por [INSTRUCCIONES_V12.md](INSTRUCCIONES_V12.md).** Esta actualización incorpora **ocho pisos**, mantiene el espacio central libre y conserva únicamente un lucernario traslúcido en la cubierta, coloca **dos escaleras laterales de 2,8 m de ancho nominal** en extremos opuestos y agrupa **dos ascensores** en un mismo lateral junto a los salones. Incluye recorrido en primera persona y multijugador con avatares, nombres y posiciones sincronizadas mediante PHP/MySQL. Consulta el plano en [VISTA_DIMENSIONES_V12.html](VISTA_DIMENSIONES_V12.html).
 
 **Aviso:** es una maqueta educativa conceptual. No representa un levantamiento arquitectónico, plano constructivo, cálculo estructural, aforo ni ruta de evacuación certificada. Las dimensiones y la anchura de las escaleras son parámetros visuales de la maqueta, no medidas oficiales de SENATI.
 
