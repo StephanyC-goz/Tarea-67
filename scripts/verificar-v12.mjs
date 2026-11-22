@@ -4,7 +4,8 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {carveSlab,rectangleArea} from '../src/atrium-geometry.js';
-import {EV52_ATRIUM,EV52_ROOMS,EV52_STAIRWELLS,EV52_ELEVATORS,getPyramidDimensions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH} from '../src/ev52-layout.js';
+import {getFirstFloorFrontPlan} from '../src/primer-piso-frente.js';
+import {EV52_ATRIUM,EV52_ROOMS,EV52_WALL_SEGMENTS,EV52_STAIRWELLS,EV52_ELEVATORS,getPyramidDimensions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH} from '../src/ev52-layout.js';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const src=name=>readFileSync(resolve(root,name),'utf8');
@@ -31,6 +32,35 @@ assert(EV52_ELEVATORS.every(e=>e.xMin>=bounds.left&&e.xMax<=bounds.right),'Ascen
 for(const room of EV52_ROOMS)assert(!overlaps(room,a),`El tragaluz no invade el salón ${room.id}`);
 for(const h of [...stairHoles,...liftHoles])assert(!overlaps(h,a),'Ningún núcleo invade el espacio central');
 for(let i=0;i<allHoles.length;i++)for(let j=i+1;j<allHoles.length;j++)assert(!overlaps(allHoles[i],allHoles[j]),'Núcleos y tragaluz no se superponen');
+
+// El primer piso es el frente del croquis: ambas escaleras deben estar en
+// el bloque superior derecho, nunca dentro del salón 2 ni de otra sala.
+const groundPlan=getFirstFloorFrontPlan(bounds,[...EV52_STAIRWELLS,...EV52_ELEVATORS]);
+assert.equal(groundPlan.doors.length,8,'Se conservan las ocho puertas verdes');
+assert(EV52_STAIRWELLS.every(st=>st.xMin>15.5&&st.zTop< -15&&st.zBottom< -8.2),
+  'Las dos escaleras están en la zona superior derecha del croquis');
+for(const stair of EV52_STAIRWELLS){
+  assert(stair.zTop>bounds.back&&stair.zBottom<bounds.front&&stair.xMax<bounds.right,
+    'Escaleras dentro de la huella del edificio');
+  for(const wall of [...groundPlan.walls,...EV52_WALL_SEGMENTS]){
+    const m=.10;
+    const intersects=Math.max(wall.x0,wall.x1)+m>stair.xMin
+      &&Math.min(wall.x0,wall.x1)-m<stair.xMax
+      &&Math.max(wall.z0,wall.z1)+m>stair.zTop
+      &&Math.min(wall.z0,wall.z1)-m<stair.zBottom;
+    assert(!intersects,stair.id+': ningún muro puede atravesar los peldaños');
+  }
+  for(const door of groundPlan.doors){
+    const half=door.width/2;
+    const bbox=door.side==='x'
+      ?{x0:door.x-.12,x1:door.x+.12,z0:door.z-half,z1:door.z+half}
+      :{x0:door.x-half,x1:door.x+half,z0:door.z-.12,z1:door.z+.12};
+    assert(!overlaps(bbox,{x0:stair.xMin,x1:stair.xMax,z0:stair.zTop,z1:stair.zBottom}),
+      stair.id+': no invade ninguna puerta verde');
+  }
+}
+assert(groundPlan.doors.some(d=>d.id==='acceso-escaleras'&&d.x<EV52_STAIRWELLS[0].xMin),
+  'El acceso a escaleras conserva el hueco de puerta del croquis');
 
 const ground=carveSlab(bounds);
 const upper=carveSlab(bounds,allHoles);
