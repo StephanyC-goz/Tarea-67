@@ -138,7 +138,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const classroomDoors=[],floorWallBoxes=Array.from({length:levels},()=>[]);
   const wallThickness=.12,wallHeight=levelHeight-.17;
   const floorBounds={left:X(-13.02*56/34),right:X(14.48*56/34),back:Z(-8.70*38/20),front:Z(8.70*38/20)};
-  const firstFloorPlan=getFirstFloorFrontPlan(floorBounds);
+  const firstFloorPlan=getFirstFloorFrontPlan(floorBounds,[...stairsLayout,...liftLayouts]);
   const holes=[...stairsLayout.map(st=>({x0:st.xMin,x1:st.xMax,z0:st.zTop,z1:st.zBottom})),
     ...liftLayouts.map(l=>({x0:l.xMin,x1:l.xMax,z0:l.zTop,z1:l.zBottom})),atrium];
   // Cortar las losas, sin cubrir accidentalmente los huecos del elevador y escaleras.
