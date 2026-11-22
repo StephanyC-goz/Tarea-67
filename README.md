@@ -1,9 +1,12 @@
-# Pirámide SENATI 3D — Versión V9, escala ampliada
+# Pirámide SENATI 3D — Versión V12
 
-**Empieza por [INSTRUCCIONES_V9.md](INSTRUCCIONES_V9.md).** Esta versión sustituye las paredes confusas de V8 por una planta de 10 ambientes con accesos, un pasadizo y vestíbulo, dos escaleras y un ascensor didáctico de navegación. Tamaño de maqueta inicial **56 × 38 m**, seis pisos de **3,8 m** cada uno, adaptables desde el editor. Conoce las medidas de cada espacio en [VISTA_DIMENSIONES_V9.html](VISTA_DIMENSIONES_V9.html) usando el servidor local.
+**Empieza por [INSTRUCCIONES_V12.md](INSTRUCCIONES_V12.md).** Esta actualización incorpora **ocho pisos**, mantiene el espacio central como tragaluz libre, coloca **dos escaleras laterales de 2,8 m de ancho nominal** en extremos opuestos y agrupa **dos ascensores** en un mismo lateral junto a los salones. Incluye recorrido en primera persona y multijugador con avatares, nombres y posiciones sincronizadas mediante PHP/MySQL. Consulta el plano en [VISTA_DIMENSIONES_V12.html](VISTA_DIMENSIONES_V12.html).
 
-**Aviso:** es una maqueta conceptual realizada a partir de referencias visuales. No se trata de un levantamiento real, planos constructivos, cálculo estructural ni plano oficial de evacuación de SENATI. Los pisos 2–6 son una propuesta didáctica de distribución y no están documentados en el croquis aportado.
+**Aviso:** es una maqueta educativa conceptual. No representa un levantamiento arquitectónico, plano constructivo, cálculo estructural, aforo ni ruta de evacuación certificada. Las dimensiones y la anchura de las escaleras son parámetros visuales de la maqueta, no medidas oficiales de SENATI.
 
+---
+
+# Versiones anteriores
 ---
 
 # V7 · Primer piso EV-52 (referencial)
