@@ -170,7 +170,7 @@ function buildRoomShell(objects=[]){
    gridHelper=new THREE.GridHelper(Math.max(roomWidth,roomDepth),Math.max(roomWidth,roomDepth),0x8392a3,0xb2c3d4);
    gridHelper.visible=gridVisible;gridHelper.material.transparent=true;gridHelper.material.opacity=.08;gridHelper.position.y=.02;roomGroup.add(gridHelper);
    const facade=buildPiramideSENATI(roomGroup,{width:roomWidth,depth:roomDepth,levelHeight:roomHeight,
-       levels:Math.min(6,Math.max(3,Number(appearance.floorCount)||5)),mode:appearance.pyramidView||'exterior',roofVisible});
+       levels:Math.min(8,Math.max(3,Number(appearance.floorCount)||8)),mode:appearance.pyramidView||'exterior',roofVisible});
    roofMesh=facade.roof;
    return;
  }
@@ -245,14 +245,14 @@ function renderSavedObjects(objects){
 function fitCamera(){
  camera.up.set(0,1,0);camera.fov=50;camera.updateProjectionMatrix();
  if(appearance.buildingPlan==='senati-pyramid'){
-   const y=roomHeight*(Number(appearance.floorCount)||5)*.52;
+   const y=roomHeight*(Number(appearance.floorCount)||8)*.52;
    const span=Math.max(roomWidth,roomDepth);camera.position.set(span*.72,y+span*.48,span*1.30);orbit.target.set(0,y,3);orbit.update();return;
  }
  const span=Math.max(roomWidth,roomDepth),upperY=Number(appearance.floorHeight)||roomHeight,totalHeight=appearance.buildingPlan==='two-floor'?upperY+roomHeight:roomHeight;camera.position.set(0,Math.max(8.5,totalHeight+span*.30),span*1.25);orbit.target.set(0,appearance.buildingPlan==='two-floor'?upperY*.92:1.05,0);orbit.update();
 }
 function setView(view){
  if(appearance.buildingPlan==='senati-pyramid'){
-   const levelY=roomHeight*(Number(appearance.floorCount)||5);
+   const levelY=roomHeight*(Number(appearance.floorCount)||8);
    const target=new THREE.Vector3(0,levelY*.52,0),span=Math.max(roomWidth,roomDepth);let pos;
    if(view==='front')pos=[0,levelY*.75,span*1.35];
    else if(view==='back')pos=[0,levelY*.75,-span*1.35];
@@ -450,7 +450,7 @@ async function loadScenario(id){
 function loadDemoScenario(){
   // Escenario de demostración local: permite ensayar funciones antes de guardar algo en MySQL.
   roomWidth=DEFAULT_PYRAMID_WIDTH;roomDepth=DEFAULT_PYRAMID_DEPTH;roomHeight=DEFAULT_LEVEL_HEIGHT;
-  appearance={floorType:'tile',floorColor:'#eadfc9',wallColor:'#eff2f5',deskColor:'#1559a8',chairColor:'#202a38',buildingPlan:'senati-pyramid',floorCount:6,pyramidView:'transparente',climate:'day'};
+  appearance={floorType:'tile',floorColor:'#eadfc9',wallColor:'#eff2f5',deskColor:'#1559a8',chairColor:'#202a38',buildingPlan:'senati-pyramid',floorCount:8,pyramidView:'transparente',climate:'day'};
   roofVisible=true;gridVisible=false;
   savedObjects=[];
   const {x:sx,z:sz}=pyramidScale(roomWidth,roomDepth);
