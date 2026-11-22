@@ -12,7 +12,7 @@ export const DEFAULT_PYRAMID_WIDTH=56;
 export const DEFAULT_PYRAMID_DEPTH=38;
 export const DEFAULT_LEVEL_HEIGHT=3.8;
 /**
- * V11: patio de luz vertical (hueco abierto), expresado en coordenadas reales
+ * V12: tragaluz central libre (hueco abierto), expresado en coordenadas reales
  * del módulo 56 × 38 m. No tapa el suelo de planta baja; se recortan las
  * losas de las plantas 2 a 8 y la cubierta. No procede de medidas certificadas.
  * El pasillo frontal del aula superior conserva 2.44 m y el inferior 2.07 m.
