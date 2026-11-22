@@ -92,7 +92,7 @@ const DESK_LENGTH = 1.58;
 const DESK_DEPTH = .72;
 
 function ensureFloorModel(){
-  const wanted=appearance.buildingPlan==='senati-pyramid'?THREE.MathUtils.clamp(Number(appearance.floorCount)||5,3,6):(appearance.buildingPlan==='two-floor'?2:1);
+  const wanted=appearance.buildingPlan==='senati-pyramid'?THREE.MathUtils.clamp(Number(appearance.floorCount)||8,3,8):(appearance.buildingPlan==='two-floor'?2:1);
   const current=Array.isArray(appearance.floors)?appearance.floors:[];
   const floors=[];
   for(let i=0;i<wanted;i++){
@@ -133,7 +133,7 @@ function syncFloorControls(){
   if(![...scope.options].some(o=>o.value===scope.value))scope.value='global';
   const isPyramid=appearance.buildingPlan==='senati-pyramid';
   $('remove-floor').disabled=floors.length<=(isPyramid?3:1);
-  $('add-floor').disabled=floors.length>=(isPyramid?6:2);
+  $('add-floor').disabled=floors.length>=(isPyramid?8:2);
   $('floor-manager-hint').textContent=isPyramid?`${floors.length} plantas conceptuales, con escaleras transitables. No son planos estructurales reales.`:(floors.length===1?'Este escenario tiene un nivel. Agrega el segundo piso para habilitar la escalera y la conexión vertical.':'Selecciona el piso de trabajo. Los cambios Globales se aplican a todos los niveles.');
   const style=scope.value==='global'?{floorType:appearance.floorType,floorColor:appearance.floorColor}:floorStyle(Number(scope.value));
   $('floor-type').value=style.floorType;
@@ -168,7 +168,7 @@ function selectConstructionFloor(index,{moveCamera=true}={}){
 function setFloorCount(count){
   if(appearance.buildingPlan==='senati-pyramid'){
     const old=getFloors();
-    count=THREE.MathUtils.clamp(Number(count)||6,3,6);
+    count=THREE.MathUtils.clamp(Number(count)||8,3,8);
     appearance.floorCount=count;
     appearance.floors=Array.from({length:count},(_,i)=>old[i]||{id:i+1,name:`Planta ${i+1} (aproximada)`,elevation:i*room.height,height:room.height,floorType:appearance.floorType,floorColor:appearance.floorColor});
     for(const obj of [...placed])if(obj.position.y>(count-1)*room.height+.5){objectGroup.remove(obj);placed.splice(placed.indexOf(obj),1);}
@@ -1399,7 +1399,7 @@ $('pyramid-template').addEventListener('click',()=>{
   placed.forEach(o=>objectGroup.remove(o));placed=[];selectObject(null);currentScenarioId=null;
   room={width:DEFAULT_PYRAMID_WIDTH,depth:DEFAULT_PYRAMID_DEPTH,height:DEFAULT_LEVEL_HEIGHT};
   appearance={floorType:'concrete',floorColor:'#deddd8',wallColor:'#b0a69c',deskColor:'#1559a8',chairColor:'#202a38',
-    climate:'day',buildingPlan:'senati-pyramid',floorCount:6,pyramidView:'transparente',facadeColor:'#afa59b',signColor:'#1251cb',floors:Array.from({length:6},(_,i)=>({id:i+1,name:`Piso ${i+1}`,elevation:i*DEFAULT_LEVEL_HEIGHT,height:DEFAULT_LEVEL_HEIGHT,floorType:'concrete',floorColor:'#deddd8'}))};
+    climate:'day',buildingPlan:'senati-pyramid',floorCount:8,pyramidView:'transparente',facadeColor:'#afa59b',signColor:'#1251cb',floors:Array.from({length:8},(_,i)=>({id:i+1,name:`Piso ${i+1}`,elevation:i*DEFAULT_LEVEL_HEIGHT,height:DEFAULT_LEVEL_HEIGHT,floorType:'concrete',floorColor:'#deddd8'}))};
   activeFloorIndex=0;roofVisible=false;gridVisible=false;
   $('opt-roof').checked=false;$('opt-grid').checked=false;
   $('auto-station').checked=false;$('auto-seat').checked=false;
@@ -1407,7 +1407,7 @@ $('pyramid-template').addEventListener('click',()=>{
   $('room-width').value=room.width;$('room-depth').value=room.depth;$('room-height').value=room.height;
   document.querySelectorAll('.scenario-card').forEach(card=>card.classList.toggle('selected',card.id==='pyramid-template'));
   $('construction-floor').value='0';syncAppearanceInputs();makeRoom();
-  // Seis pisos interiores con salones equipados (20 estaciones por nivel).
+  // Ocho pisos interiores con salones equipados (20 estaciones por nivel).
   populatePyramidInterior({silent:true});
   // Personas y señalización en el acceso exterior, en posiciones referenciales.
   addObject('man-senati',new THREE.Vector3(-1.8,0,room.depth/2+3.5),{silent:true});
@@ -1415,7 +1415,7 @@ $('pyramid-template').addEventListener('click',()=>{
   // La puerta de entrada ya está construida en la geometría de la fachada.
   addObject('safety-exit',new THREE.Vector3(0,0,room.depth/2-1.5),{silent:true});
   selectObject(null);renderLibrary();renderObjectList();applyFloorVisibility();markDirty();
-  $('scene-template-tag').textContent='Pirámide SENATI V11 · atrio abierto · 6 pisos';
+  $('scene-template-tag').textContent='Pirámide SENATI V12 · tragaluz libre · 8 pisos';
   showToast('V11: tragaluz central abierto del piso 2 al techo, con barandillas perimetrales y patio de luz.');
 });
 ['pyramid-facade-color','pyramid-sign-color'].forEach(id=>$(id)?.addEventListener('change',()=>{
@@ -1441,7 +1441,7 @@ function enterWalkMode(){
   placed.forEach(o=>o.visible=nearestFloorIndex(o.position.y)===0);
   if(appearance.buildingPlan==='senati-pyramid'){
     camera.position.set(0,1.65,(pyramidBuilding?.entry?.frontZ??room.depth/2)+5.4);camera.rotation.set(0,0,0);
-    $('walk-hud').querySelector('span').textContent='WASD · Shift correr · E puertas/ascensor · Escaleras conectan las 6 plantas · ESC salir';
+    $('walk-hud').querySelector('span').textContent='WASD · Shift correr · E puertas/ascensor · Escaleras conectan las 8 plantas · ESC salir';
   }else if(appearance.buildingPlan==='two-floor'&&getFloors().length>1){
     const stair=getStairSpec();
     camera.position.set(stair.x,1.65,Math.min(room.depth/2-.6,stair.bottomZ+2.2));
