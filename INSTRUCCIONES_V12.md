@@ -4,7 +4,7 @@
 
 V12 conserva la abertura central del edificio como un vacío vertical libre. No se colocan dentro del tragaluz escaleras, ascensores, columnas, núcleo de hormigón, pasarelas ni paños de vidrio que lo tapen.
 
-- **Tragaluz central:** se mantiene despejado. Las losas de los pisos superiores y la azotea respetan el hueco; las barandas van únicamente en su perímetro.
+- **Tragaluz central:** el vacío queda libre de escaleras, ascensores, columnas, núcleo de hormigón y pasarelas. Las losas respetan la abertura, las barandas van solo en el perímetro y en la cubierta se conserva únicamente un lucernario traslúcido.
 - **Dos escaleras:** una a cada extremo lateral del edificio, junto a las zonas de salones. Cada núcleo tiene 2,8 m de ancho nominal en la maqueta para representar el paso de dos personas lado a lado.
 - **Dos ascensores:** agrupados en el mismo lateral, juntos a la zona de salones y fuera del tragaluz.
 - **Ocho pisos:** las escaleras conectan niveles consecutivos. Los ascensores tienen cabina móvil y puertas por planta; se usa E para abrir y volver a pulsar E para entrar y viajar al siguiente piso.
