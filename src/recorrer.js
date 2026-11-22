@@ -26,7 +26,7 @@ let remoteGroup=new THREE.Group();remoteGroup.name='Jugadores conectados';sceneR
 let furniture=new THREE.Group();sceneRoot.add(furniture);
 const remotePlayers=new Map();
 const csrfToken=document.querySelector('meta[name="csrf-token"]')?.content||'';
-let multiplayerKey='',multiplayerStarted=false,multiplayerOnline=false;
+let multiplayerKey='',multiplayerConnecting=false,multiplayerLoopsStarted=false,multiplayerOnline=false;
 let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=8,elevatorRide=null;
 let W=DEFAULT_PYRAMID_WIDTH,D=DEFAULT_PYRAMID_DEPTH,H=DEFAULT_LEVEL_HEIGHT,frontZ=16.8,sideLeft=-21.5,sideRight=24,backZ=-16.55;
 let items=[],collisionBoxes=[],stairRoute=null,stationPositions=[],seatedAt=null,pcOpen=false;
@@ -289,13 +289,15 @@ async function pollMultiplayer(){
   }
 }
 async function connectMultiplayer(){
-  if(multiplayerStarted)return;multiplayerStarted=true;
+  if(multiplayerOnline||multiplayerConnecting)return;
+  multiplayerConnecting=true;
   const status=$('multiplayer-status');
   try{
     const result=await multiplayerRequest('join',multiplayerState());
     multiplayerKey=String(result.player_key||'');multiplayerOnline=Boolean(multiplayerKey);
     if(status)status.textContent=multiplayerOnline?'● Conectado al multijugador':'Multijugador no disponible';
-    if(multiplayerOnline){
+    if(multiplayerOnline&&!multiplayerLoopsStarted){
+      multiplayerLoopsStarted=true;
       await pollMultiplayer();
       window.setInterval(publishMultiplayerPosition,500);
       window.setInterval(pollMultiplayer,500);
@@ -306,7 +308,9 @@ async function connectMultiplayer(){
     }
   }catch(error){
     multiplayerOnline=false;
-    if(status)status.textContent='Multijugador no disponible · revisa la base de datos';
+    if(status)status.textContent='Multijugador no disponible · reintentando conexión…';
+  }finally{
+    multiplayerConnecting=false;
   }
 }
 function animateRemotePlayers(){
@@ -590,4 +594,4 @@ window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>{keys.clear();velocity.set(0,0,0);});
 function fit(){const w=host.clientWidth,h=host.clientHeight;if(w<2||h<2)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
 new ResizeObserver(fit).observe(host);window.addEventListener('resize',fit);
-initList().finally(()=>{fit();renderer.setAnimationLoop(tick);connectMultiplayer();});
+initList().finally(()=>{fit();renderer.setAnimationLoop(tick);connectMultiplayer();window.setInterval(()=>{if(!multiplayerOnline)connectMultiplayer();},5000);});
