@@ -330,7 +330,21 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     box(roof,atrium.x1-atrium.x0+.32,.24,.17,(atrium.x0+atrium.x1)/2,H+.50,z,skylightBorder,false);
   for(const x of [atrium.x0,atrium.x1])
     box(roof,.17,.24,atrium.z1-atrium.z0+.32,x,H+.50,(atrium.z0+atrium.z1)/2,skylightBorder,false);
-  // No se colocan paños ni vigas sobre el tragaluz: la abertura de azotea queda libre.\n  const signY=H+2.02;
+  // El único elemento sobre el vacío es el lucernario translúcido de la cubierta.
+  // El espacio inferior permanece libre: no hay columnas, muros ni equipos dentro del atrio.
+  const skyGlass=new THREE.MeshPhysicalMaterial({color:0xd9e8ed,transparent:true,
+    opacity:.28,roughness:.23,depthWrite:false,side:THREE.DoubleSide});
+  const aw=atrium.x1-atrium.x0,ad=atrium.z1-atrium.z0;
+  const ax=(atrium.x0+atrium.x1)/2,az=(atrium.z0+atrium.z1)/2;
+  const skylight=new THREE.Group();skylight.name='Tragaluz único · vidrio traslúcido en cubierta';roof.add(skylight);
+  const cols=8,rows=3;
+  const paneW=aw/cols,paneD=ad/rows;
+  for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
+    box(skylight,Math.max(.005,paneW-.075),.035,Math.max(.005,paneD-.075),
+      atrium.x0+(i+.5)*paneW,H+.52,atrium.z0+(j+.5)*paneD,skyGlass,false);
+  }
+  for(let i=1;i<cols;i++)box(skylight,.075,.11,ad,atrium.x0+i*paneW,H+.55,az,skylightBorder,false);
+  for(let j=1;j<rows;j++)box(skylight,aw,.11,.075,ax,H+.55,atrium.z0+j*paneD,skylightBorder,false);\n  const signY=H+2.02;
   const billboardWidth=Math.min(31,facadeWidth*.78);
   box(shell,billboardWidth,3.65,.30,centerX,signY,front+.20,blue);
   const sign=new THREE.Mesh(new THREE.PlaneGeometry(billboardWidth-.25,3.42),new THREE.MeshBasicMaterial({map:signTexture(signColor),side:THREE.DoubleSide}));
