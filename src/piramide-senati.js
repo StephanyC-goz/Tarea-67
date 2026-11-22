@@ -181,7 +181,9 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     addRailZ(x1,z0,z1);
   }
 
-  // El atrio no contiene núcleo, columnas ni equipos: queda completamente vacío.\n\n  const wallX=(g,x,z0,z1,y,h=wallHeight)=>{
+  // El atrio no contiene núcleo, columnas ni equipos: queda completamente vacío.
+
+  const wallX=(g,x,z0,z1,y,h=wallHeight)=>{
     if(z1-z0>.04)box(g,wallThickness,h,z1-z0,x,y+h/2,(z0+z1)/2,roomWall,false);
   };
   const wallZ=(g,z,x0,x1,y,h=wallHeight)=>{
@@ -344,7 +346,8 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       atrium.x0+(i+.5)*paneW,H+.52,atrium.z0+(j+.5)*paneD,skyGlass,false);
   }
   for(let i=1;i<cols;i++)box(skylight,.075,.11,ad,atrium.x0+i*paneW,H+.55,az,skylightBorder,false);
-  for(let j=1;j<rows;j++)box(skylight,aw,.11,.075,ax,H+.55,atrium.z0+j*paneD,skylightBorder,false);\n  const signY=H+2.02;
+  for(let j=1;j<rows;j++)box(skylight,aw,.11,.075,ax,H+.55,atrium.z0+j*paneD,skylightBorder,false);
+  const signY=H+2.02;
   const billboardWidth=Math.min(31,facadeWidth*.78);
   box(shell,billboardWidth,3.65,.30,centerX,signY,front+.20,blue);
   const sign=new THREE.Mesh(new THREE.PlaneGeometry(billboardWidth-.25,3.42),new THREE.MeshBasicMaterial({map:signTexture(signColor),side:THREE.DoubleSide}));
