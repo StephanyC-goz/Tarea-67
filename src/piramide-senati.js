@@ -151,7 +151,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       box(target,w,thickness,d,(p.left+p.right)/2,y,(p.back+p.front)/2,material,false);
     }
   }
-  // Barandas en pisos 2-6, sin cruzar el núcleo adosado al borde derecho.
+  // Las barandas rodean el vano sin atravesar el muro del borde superior.
   function addAtriumRailing(base,f){
     const {x0,x1,z0,z1}=atrium;
     const low=base+.09,top=low+1.14,mid=low+.61;
@@ -161,47 +161,52 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       box(atriumGroup,.10,.085,length,x,top,center,railingBlue,false);
       box(atriumGroup,.10,.075,length,x,low+.16,center,railingBlue,false);
       box(atriumGroup,.030,.83,length,x,mid,center,railingGlass,false);
-      for(let z=a;z<=b+.001;z+=(length/4)){
-        box(atriumGroup,.055,1.14,.043,x,low+.57,Math.min(z,b),skylightBorder,false);
-      }
+      for(let i=0;i<=4;i++)
+        box(atriumGroup,.055,1.14,.043,x,low+.57,a+length*i/4,skylightBorder,false);
       floorWallBoxes[f].push({x0:x-.08,x1:x+.08,z0:a,z1:b});
     };
-    const addRailX=(z)=>{
-      const length=x1-x0,center=(x0+x1)/2;
+    const addRailX=(z,a,b)=>{
+      if(b-a<.01)return;
+      const length=b-a,center=(a+b)/2;
       box(atriumGroup,length,.085,.10,center,top,z,railingBlue,false);
       box(atriumGroup,length,.075,.09,center,low+.16,z,railingBlue,false);
       box(atriumGroup,length,.83,.030,center,mid,z,railingGlass,false);
-      for(let x=x0;x<=x1+.001;x+=length/8)
-        box(atriumGroup,.043,1.14,.055,Math.min(x,x1),low+.57,z,skylightBorder,false);
-      floorWallBoxes[f].push({x0,x1,z0:z-.08,z1:z+.08});
+      for(let i=0;i<=8;i++)
+        box(atriumGroup,.043,1.14,.055,a+length*i/8,low+.57,z,skylightBorder,false);
+      floorWallBoxes[f].push({x0:a,x1:b,z0:z-.08,z1:z+.08});
     };
-    for(const z of [z0,z1])addRailX(z);
+    // Arriba: dejar un tramo central sin baranda, ocupado por el muro.
+    addRailX(z0,x0,core.x0);
+    addRailX(z0,core.x1,x1);
+    addRailX(z1,x0,x1);
     addRailZ(x0,z0,z1);
-    // En el lado derecho, dejar libre el tramo ocupado por el muro central.
-    addRailZ(x1,z0,core.z0);
-    addRailZ(x1,core.z1,z1);
+    addRailZ(x1,z0,z1);
   }
-  // Croquis de planta: el núcleo está adosado al BORDE DERECHO del tragaluz.
-  // Su huella ocupa aprox. 6.4 % del ancho y 56 % del largo del vano;
-  // dimensiones proporcionales al dibujo, no cotas arquitectónicas reales.
-  const coreZ=(atrium.z0+atrium.z1)/2;
-  const coreWidth=(atrium.z1-atrium.z0)*.56;
-  const core={x0:atrium.x1-.82*scaleX,x1:atrium.x1,
-    z0:coreZ-coreWidth/2,z1:coreZ+coreWidth/2};
-  const coreX=(core.x0+core.x1)/2,coreH=H-.35;
+
+  // Croquis 22/11: muro centrado en el borde superior CORTO del atrio.
+  // El plano 2D se representa con el eje Z hacia abajo; su borde superior
+  // corresponde a atrium.z0. El muro entra ligeramente en el espacio abierto.
+  // Proporciones visuales aproximadas: 56 % del ancho y 7 % de la profundidad.
+  const coreX=(atrium.x0+atrium.x1)/2;
+  const coreWidth=(atrium.x1-atrium.x0)*.56;
+  const coreDepth=(atrium.z1-atrium.z0)*.07;
+  const core={x0:coreX-coreWidth/2,x1:coreX+coreWidth/2,
+    z0:atrium.z0,z1:atrium.z0+coreDepth};
+  const coreZ=(core.z0+core.z1)/2,coreH=H-.35;
   const brownConcrete=standard(0x756a60,.94);
-  const coreFace=core.x0-.035;
-  box(atriumGroup,core.x1-core.x0,coreH,coreWidth,coreX,coreH/2,coreZ,brownConcrete,false);
-  // Banda gris continua y rejillas visibles desde el vestíbulo.
-  box(atriumGroup,.07,coreH,coreWidth*.32,coreFace,coreH/2,coreZ,coreConcrete,false);
+  box(atriumGroup,coreWidth,coreH,coreDepth,coreX,coreH/2,coreZ,brownConcrete,false);
+  // Franja vertical gris en la cara que mira al vacío central.
+  box(atriumGroup,coreWidth*.32,coreH,.07,coreX,coreH/2,core.z1+.035,coreConcrete,false);
   const ventFrame=standard(0xc7c9c5,.65),ventDark=standard(0x5b6465,.89);
   for(const y of [coreH*.29,coreH*.84]){
-    box(atriumGroup,.025,.34,.43,core.x0-.082,y,coreZ,ventFrame,false);
-    for(let i=0;i<7;i++)box(atriumGroup,.028,.017,.34,core.x0-.098,y-.112+i*.037,coreZ,ventDark,false);
+    box(atriumGroup,.43,.34,.025,coreX,y,core.z1+.082,ventFrame,false);
+    for(let i=0;i<7;i++)
+      box(atriumGroup,.34,.017,.028,coreX,y-.112+i*.037,core.z1+.098,ventDark,false);
   }
-  for(let f=0;f<levels;f++){
-    floorWallBoxes[f].push({...core,x0:core.x0-.115,x1:core.x1+.115});
-  }
+  // Volumen sólido no atravesable en los seis pisos.
+  for(let f=0;f<levels;f++)
+    floorWallBoxes[f].push({...core,z0:core.z0-.115,z1:core.z1+.115});
+
   const wallX=(g,x,z0,z1,y,h=wallHeight)=>{
     if(z1-z0>.04)box(g,wallThickness,h,z1-z0,x,y+h/2,(z0+z1)/2,roomWall,false);
   };
@@ -267,7 +272,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     placeFloorLabel(floor,'PASADIZO AL TRAGALUZ',atrium.x1+2.2,(corridorBack+corridorFront)/2,3.9,'#246a61',base+.108);
     if(f===0){
       box(floor,atrium.x1-atrium.x0,.024,atrium.z1-atrium.z0,(atrium.x0+atrium.x1)/2,base+.101,(atrium.z0+atrium.z1)/2,standard(0xd5d4cf,.88),false);
-      placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',(atrium.x0+core.x0)/2,.40,Math.min(5.0,core.x0-atrium.x0-.3),'#246a61',base+.131);
+      placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',coreX,(core.z1+atrium.z1)/2,5.0,'#246a61',base+.131);
     }else{
       // El centro es un hueco: la etiqueta se coloca en suelo FIRME junto a la baranda.
       placeFloorLabel(floor,'ATRIO ABIERTO · PISO '+(f+1),atrium.x1+3.25,0,4.8,'#246a61',base+.108);
