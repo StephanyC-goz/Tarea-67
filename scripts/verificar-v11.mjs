@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {dirname} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {carveSlab,rectangleArea} from '../src/atrium-geometry.js';
+import {getFirstFloorFrontPlan} from '../src/primer-piso-frente.js';
 import {EV52_ATRIUM,EV52_ROOMS,EV52_STAIRWELLS,EV52_ELEVATOR,getPyramidDimensions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH} from '../src/ev52-layout.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const src=name=>readFileSync(resolve(root,name),'utf8');
@@ -31,6 +32,33 @@ for(const p of [...upper,...roof]){
   assert(p.right<=a.x0+1e-7||p.left>=a.x1-1e-7||p.front<=a.z0+1e-7||p.back>=a.z1-1e-7,'Losas no cubren el tragaluz');
 }
 assert(ground.some(p=>p.left<a.x0&&p.right>a.x1&&p.back<a.z0&&p.front>a.z1),'Planta baja conserva el suelo completo del atrio');
+// Reproducción frontal del primer piso según líneas negras y puertas verdes.
+const front=getFirstFloorFrontPlan(bounds,[...EV52_STAIRWELLS,EV52_ELEVATORS]);
+assert(front.walls.length>=22,'Croquis frontal contiene divisiones interiores');
+assert.equal(front.doors.length,8,'Se reproducen las ocho aberturas verdes internas');
+assert(front.labels.some(p=>p.label==='SALÓN 1')&&front.labels.some(p=>p.label==='SALÓN 2'),'Salones identificados');
+assert(front.labels.some(p=>p.label==='BAÑO HOMBRES')&&front.labels.some(p=>p.label==='BAÑO MUJERES'),'Baños identificados');
+assert(Math.abs(front.entrance.x)<1.8,'Acceso frontal coincide aproximadamente con el portal existente');
+for(const door of front.doors){
+  assert(door.side==='x'||door.side==='z','Puerta orientada según su muro');
+  assert(door.width>.75,'Puerta practicable en maqueta');
+  for(const wall of front.walls){
+    if(wall.axis!==door.side)continue;
+    const overlap=door.side==='x'
+      ?Math.abs(wall.x0-door.x)<.03&&wall.z0<door.z+door.width/2-.03&&wall.z1>door.z-door.width/2+.03
+      :Math.abs(wall.z0-door.z)<.03&&wall.x0<door.x+door.width/2-.03&&wall.x1>door.x-door.width/2+.03;
+    assert(!overlap,door.id+': el muro no debe tapar el hueco verde');
+  }
+}
+for(const wall of front.walls)for(const core of [...EV52_STAIRWELLS,...EV52_ELEVATORS]){
+  const xMin=Math.min(wall.x0,wall.x1),xMax=Math.max(wall.x0,wall.x1);
+  const zMin=Math.min(wall.z0,wall.z1),zMax=Math.max(wall.z0,wall.z1);
+  const crossing=xMax+.04>core.xMin&&xMin-.04<core.xMax&&zMax+.04>core.zTop&&zMin-.04<core.zBottom;
+  assert(!crossing,'El plano frontal no cruza escaleras ni ascensores');
+}
+assert(src('src/piramide-senati.js').includes('f===0?firstFloorPlan.walls:wallSegments'),'Solo planta baja usa muros del croquis');
+assert(src('src/piramide-senati.js').includes('f===0?firstFloorPlan.doors:doors'),'Solo planta baja usa puertas del croquis');
+assert(src('src/recorrer.js').includes("if(door.side==='x')"),'Recorrido respeta las puertas de muros verticales');
 const code=src('src/piramide-senati.js');
 assert(code.includes('makeSlab(base,f!==0)'), 'Piso 1 cerrado; pisos superiores perforados');
 assert(code.includes('if(f>0)addAtriumRailing(base,f)'), 'Barandas en pisos 2-6');
