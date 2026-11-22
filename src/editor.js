@@ -413,7 +413,7 @@ function makeRoom(){
     roofMesh=pyramidBuilding.roof;
     syncFloorControls();positionCamera();
     $('stage-dimensions').textContent=`${room.width.toFixed(1)} × ${room.depth.toFixed(1)} m · ${getFloors().length} plantas`;
-    $('viewport-status').textContent='V11 · tragaluz abierto entre plantas 2-6, barandas y patio central · medidas orientativas';
+    $('viewport-status').textContent='V12 · tragaluz central libre, 8 pisos y núcleos laterales · medidas orientativas';
     if($('pyramid-shell-mode'))$('pyramid-shell-mode').value=appearance.pyramidView||'exterior';
     if($('pyramid-facade-color'))$('pyramid-facade-color').value=appearance.facadeColor||'#afa59b';
     if($('pyramid-sign-color'))$('pyramid-sign-color').value=appearance.signColor||'#1251cb';
@@ -829,7 +829,7 @@ function syncAppearanceInputs(){
 $('floor-edit-scope').addEventListener('change',syncFloorControls);
 $('construction-floor').addEventListener('change',e=>{if(e.target.value==='all'){applyFloorVisibility();$('viewport-status').textContent='Vista global: todos los niveles';}else selectConstructionFloor(Number(e.target.value));});
 $('add-floor').addEventListener('click',()=>{
-  const max=appearance.buildingPlan==='senati-pyramid'?6:2;
+  const max=appearance.buildingPlan==='senati-pyramid'?8:2;
   const current=getFloors().length;
   if(current>=max){showToast(`Este modelo admite hasta ${max} plantas.`);return;}
   setFloorCount(current+1);selectConstructionFloor(current);
