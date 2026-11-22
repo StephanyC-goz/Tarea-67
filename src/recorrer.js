@@ -147,7 +147,7 @@ function setVisibility(){
 }
 function makeFloorOptions(){
   $('floor-select').innerHTML='';
-  for(let i=0;i<totalFloors;i++){let o=document.createElement('option');o.value=String(i);o.textContent=i===0&&kind==='piramide'?'Piso 1 · planta V11 con atrio':`Piso ${i+1}`;$('floor-select').append(o);}
+  for(let i=0;i<totalFloors;i++){let o=document.createElement('option');o.value=String(i);o.textContent=i===0&&kind==='piramide'?'Piso 1 · patio del tragaluz':`Piso ${i+1}`;$('floor-select').append(o);}
   $('floor-select').value=String(currentFloor);
 }
 function resetCamera(){
