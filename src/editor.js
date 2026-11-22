@@ -1416,7 +1416,7 @@ $('pyramid-template').addEventListener('click',()=>{
   addObject('safety-exit',new THREE.Vector3(0,0,room.depth/2-1.5),{silent:true});
   selectObject(null);renderLibrary();renderObjectList();applyFloorVisibility();markDirty();
   $('scene-template-tag').textContent='Pirámide SENATI V12 · tragaluz libre · 8 pisos';
-  showToast('V11: tragaluz central abierto del piso 2 al techo, con barandillas perimetrales y patio de luz.');
+  showToast('V12: tragaluz central libre, ocho pisos, dos escaleras laterales y dos ascensores junto a los salones.');
 });
 ['pyramid-facade-color','pyramid-sign-color'].forEach(id=>$(id)?.addEventListener('change',()=>{
   appearance.facadeColor=$('pyramid-facade-color').value;
