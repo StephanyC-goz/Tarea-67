@@ -463,7 +463,13 @@ function canMove(x,z){
     }
     for(const door of building.classroomDoors){
       if(door.floor!==currentFloor||door.open)continue;
-      if(Math.abs(z-door.z)<r+.075&&Math.abs(x-door.x)<(door.halfWidth||.84)+r)return false;
+      const half=door.halfWidth||.84;
+      if(door.side==='x'){
+        // Puerta en muro vertical del croquis frontal.
+        if(Math.abs(x-door.x)<r+.075&&Math.abs(z-door.z)<half+r)return false;
+      }else{
+        if(Math.abs(z-door.z)<r+.075&&Math.abs(x-door.x)<half+r)return false;
+      }
     }
   }
   if(kind==='piramide'&&building?.elevators){
