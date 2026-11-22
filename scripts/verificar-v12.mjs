@@ -50,7 +50,9 @@ assert(model.includes('...liftLayouts.map'),'Los dos pozos de ascensor se recort
 assert(model.includes('const elevators=liftLayouts.map'),'Se construyen dos cabinas');
 assert(model.includes('setElevatorCabinLevel'),'Cabinas con movimiento vertical');
 assert(model.includes('if(f>0)addAtriumRailing(base,f)'),'Barandas alrededor del tragaluz en pisos superiores');
-assert(!model.includes('coreConcrete')&&!model.includes('const coreX')&&!model.includes('skyGlass'),'Atrio sin núcleo ni paños de vidrio encima');
+assert(!model.includes('coreConcrete')&&!model.includes('const coreX'),'Atrio sin núcleo ni columnas centrales');
+assert(model.includes('Tragaluz único · vidrio traslúcido en cubierta')&&model.includes('const skyGlass='),'El único elemento sobre el vacío es el lucernario de cubierta');
+assert(model.indexOf('const skyGlass=')>model.indexOf('makeSlab(H+.15'),'El lucernario está solo en la cubierta');
 assert(model.includes('makeSlab(H+.15,true,roof,.45,roofBounds,concreteLight)'),'Azotea recortada para el tragaluz');
 assert(walk.includes('totalFloors=kind===\'piramide\'?8:1'),'Recorrido habilita ocho pisos');
 assert(walk.includes('updateElevatorRide(dt)'),'Recorrido anima el ascensor');
