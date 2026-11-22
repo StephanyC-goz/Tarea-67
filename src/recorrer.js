@@ -22,7 +22,11 @@ const world=new THREE.Scene();world.background=new THREE.Color(0xbadbf2);
 const hemi=new THREE.HemisphereLight(0xf6faff,0xbabcb2,2.0);world.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff9e8,1.45);sun.position.set(15,28,20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-50;sun.shadow.camera.right=50;sun.shadow.camera.top=50;sun.shadow.camera.bottom=-50;world.add(sun);
 let sceneRoot=new THREE.Group();world.add(sceneRoot);
+let remoteGroup=new THREE.Group();remoteGroup.name='Jugadores conectados';sceneRoot.add(remoteGroup);
 let furniture=new THREE.Group();sceneRoot.add(furniture);
+const remotePlayers=new Map();
+const csrfToken=document.querySelector('meta[name="csrf-token"]')?.content||'';
+let multiplayerKey='',multiplayerStarted=false,multiplayerOnline=false;
 let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=8,elevatorRide=null;
 let W=DEFAULT_PYRAMID_WIDTH,D=DEFAULT_PYRAMID_DEPTH,H=DEFAULT_LEVEL_HEIGHT,frontZ=16.8,sideLeft=-21.5,sideRight=24,backZ=-16.55;
 let items=[],collisionBoxes=[],stairRoute=null,stationPositions=[],seatedAt=null,pcOpen=false;
@@ -161,6 +165,8 @@ function setFloor(index){
 }
 function buildScene(scenario){
   world.remove(sceneRoot);sceneRoot=new THREE.Group();world.add(sceneRoot);
+  remoteGroup=new THREE.Group();remoteGroup.name='Jugadores conectados';sceneRoot.add(remoteGroup);
+  remotePlayers.clear();
   furniture=new THREE.Group();sceneRoot.add(furniture);
   items=[];doorOpen=false;stairRoute=null;seatedAt=null;elevatorRide=null;closePC();
   kind=scenario.kind||'piramide';W=kind==='piramide'?DEFAULT_PYRAMID_WIDTH:20;D=kind==='piramide'?DEFAULT_PYRAMID_DEPTH:12;H=kind==='piramide'?DEFAULT_LEVEL_HEIGHT:3.35;
@@ -206,6 +212,109 @@ async function initList(){
   const select=$('scenario-select');select.replaceChildren();
   for(const s of sceneEntries){const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.name;select.add(opt);}
   select.value='piramide';await loadScene('piramide');
+}
+function multiplayerState(){
+  return {floor:currentFloor,x:camera.position.x,y:camera.position.y,z:camera.position.z,
+    yaw:camera.rotation.y,scene:kind};
+}
+function remoteColor(key){
+  let hash=0;for(let i=0;i<key.length;i++)hash=(hash*31+key.charCodeAt(i))|0;
+  const color=new THREE.Color();color.setHSL((Math.abs(hash)%360)/360,.62,.54);return color;
+}
+function createRemotePlayer(player){
+  const group=new THREE.Group();group.name=`Jugador · ${player.player_name}`;
+  const color=remoteColor(String(player.player_key));
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.24,.31,.95,10),new THREE.MeshStandardMaterial({color,roughness:.72}));
+  body.position.y=.88;body.castShadow=true;group.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),new THREE.MeshStandardMaterial({color:0xe4b994,roughness:.8}));
+  head.position.y=1.55;head.castShadow=true;group.add(head);
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='rgba(5,22,43,.84)';ctx.beginPath();ctx.roundRect(20,24,984,208,42);ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='bold 100px Arial';ctx.fillText(String(player.player_name||'Jugador').slice(0,28),512,132,920);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));
+  label.position.y=2.25;label.scale.set(2.5,.62,1);group.add(label);
+  remoteGroup.add(group);
+  return {group,label,texture,target:new THREE.Vector3(),floor:0,yaw:0,name:String(player.player_name||'Jugador')};
+}
+function syncRemotePlayers(players){
+  const seen=new Set();
+  for(const player of players||[]){
+    const key=String(player.player_key||'');
+    if(!key||key===multiplayerKey)continue;
+    seen.add(key);
+    let remote=remotePlayers.get(key);
+    if(!remote){remote=createRemotePlayer(player);remotePlayers.set(key,remote);}
+    remote.floor=Number(player.floor_no)||0;
+    remote.yaw=Number(player.yaw)||0;
+    remote.target.set(Number(player.pos_x)||0,(Number(player.pos_y)||1.68)-1.68,Number(player.pos_z)||0);
+    remote.group.visible=remote.floor===currentFloor;
+  }
+  for(const [key,remote] of remotePlayers){
+    if(!seen.has(key)){remoteGroup.remove(remote.group);remote.texture.dispose();remotePlayers.delete(key);}
+  }
+  const count=(players||[]).filter(p=>String(p.player_key)!==multiplayerKey).length+1;
+  const status=$('multiplayer-status');
+  if(status)status.textContent=multiplayerOnline?`● ${count} jugador${count===1?'':'es'} en línea`:'Multijugador desconectado';
+}
+async function multiplayerRequest(action,data=null,keepalive=false){
+  const options={credentials:'same-origin',method:data?'POST':'GET',headers:{}};
+  if(data){
+    options.headers['Content-Type']='application/json';
+    options.headers['X-CSRF-Token']=csrfToken;
+    options.body=JSON.stringify(data);
+    if(keepalive)options.keepalive=true;
+  }
+  const response=await fetch(`api/multiplayer.php?action=${encodeURIComponent(action)}`,options);
+  const result=await response.json();
+  if(!response.ok||!result.success)throw new Error(result.message||'Sin conexión multijugador');
+  return result;
+}
+async function publishMultiplayerPosition(){
+  if(!multiplayerOnline)return;
+  try{await multiplayerRequest('update',multiplayerState());}
+  catch(error){multiplayerOnline=false;const status=$('multiplayer-status');if(status)status.textContent='Multijugador: reconectando…';}
+}
+async function pollMultiplayer(){
+  if(!multiplayerOnline)return;
+  try{
+    const response=await fetch(`api/multiplayer.php?action=poll&scene=${encodeURIComponent(kind)}`,{credentials:'same-origin',cache:'no-store'});
+    const result=await response.json();
+    if(!response.ok||!result.success)throw new Error(result.message||'Error de sincronización');
+    syncRemotePlayers(result.players||[]);
+  }catch(_error){
+    multiplayerOnline=false;const status=$('multiplayer-status');if(status)status.textContent='Multijugador: reconectando…';
+  }
+}
+async function connectMultiplayer(){
+  if(multiplayerStarted)return;multiplayerStarted=true;
+  const status=$('multiplayer-status');
+  try{
+    const result=await multiplayerRequest('join',multiplayerState());
+    multiplayerKey=String(result.player_key||'');multiplayerOnline=Boolean(multiplayerKey);
+    if(status)status.textContent=multiplayerOnline?'● Conectado al multijugador':'Multijugador no disponible';
+    if(multiplayerOnline){
+      await pollMultiplayer();
+      window.setInterval(publishMultiplayerPosition,500);
+      window.setInterval(pollMultiplayer,500);
+      window.addEventListener('beforeunload',()=>{
+        if(!multiplayerOnline)return;
+        multiplayerRequest('leave',{},true).catch(()=>{});
+      });
+    }
+  }catch(error){
+    multiplayerOnline=false;
+    if(status)status.textContent='Multijugador no disponible · revisa la base de datos';
+  }
+}
+function animateRemotePlayers(){
+  for(const remote of remotePlayers.values()){
+    remote.group.visible=remote.floor===currentFloor;
+    remote.group.position.lerp(remote.target,.38);
+    remote.group.rotation.y=remote.yaw;
+  }
 }
 function nearbyStation(maxDistance=1.75){
   let best=null,dist=maxDistance;
@@ -444,6 +553,7 @@ function tick(){
     if(doorText!==currentAction){currentAction=doorText;$('walk-tooltip').textContent=doorText;$('walk-tooltip').classList.toggle('visible',!!doorText);}
     $('floor-indicator').textContent=`Piso ${currentFloor+1} / ${totalFloors}`;
   }
+  animateRemotePlayers();
   renderer.render(world,camera);
 }
 walk.addEventListener('lock',()=>{started=true;document.body.classList.add('walk-active');$('crosshair').classList.add('visible');$('status').textContent='WASD: caminar · Shift: correr · E: puerta o asiento · F: usar PC · Tab: escenarios · Esc: mouse';});
@@ -480,4 +590,4 @@ window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>{keys.clear();velocity.set(0,0,0);});
 function fit(){const w=host.clientWidth,h=host.clientHeight;if(w<2||h<2)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
 new ResizeObserver(fit).observe(host);window.addEventListener('resize',fit);
-initList().finally(()=>{fit();renderer.setAnimationLoop(tick);});
+initList().finally(()=>{fit();renderer.setAnimationLoop(tick);connectMultiplayer();});
