@@ -23,11 +23,11 @@ const hemi=new THREE.HemisphereLight(0xf6faff,0xbabcb2,2.0);world.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff9e8,1.45);sun.position.set(15,28,20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-50;sun.shadow.camera.right=50;sun.shadow.camera.top=50;sun.shadow.camera.bottom=-50;world.add(sun);
 let sceneRoot=new THREE.Group();world.add(sceneRoot);
 let furniture=new THREE.Group();sceneRoot.add(furniture);
-let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=6;
+let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=8,elevatorRide=null;
 let W=DEFAULT_PYRAMID_WIDTH,D=DEFAULT_PYRAMID_DEPTH,H=DEFAULT_LEVEL_HEIGHT,frontZ=16.8,sideLeft=-21.5,sideRight=24,backZ=-16.55;
 let items=[],collisionBoxes=[],stairRoute=null,stationPositions=[],seatedAt=null,pcOpen=false;
 const keys=new Set();const velocity=new THREE.Vector3();let started=false;
-let sceneEntries=[{id:'piramide',name:'Pirámide SENATI · 6 pisos'},{id:'aula',name:'Aula de cómputo · 20 estaciones'}];
+let sceneEntries=[{id:'piramide',name:'Pirámide SENATI · 8 pisos'},{id:'aula',name:'Aula de cómputo · 20 estaciones'}];
 const material=(color,roughness=.76,metalness=.0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
 const M={floor:material(0xdccfba),wall:material(0xe3e9ef),blue:material(0x1554a1,.55),blueEdge:material(0x10386d),metal:material(0x687b90,.48,.4),black:material(0x1e2b37),screen:material(0x0d364f,.29),keys:material(0xd1dbe4),glass:new THREE.MeshPhysicalMaterial({color:0x8dc8e5,transparent:true,opacity:.38,depthWrite:false,roughness:.2,side:THREE.DoubleSide})};
 function meshBox(parent,w,h,d,x,y,z,mat,shadow=true){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=shadow;m.receiveShadow=true;parent.add(m);return m;}
@@ -162,16 +162,16 @@ function setFloor(index){
 function buildScene(scenario){
   world.remove(sceneRoot);sceneRoot=new THREE.Group();world.add(sceneRoot);
   furniture=new THREE.Group();sceneRoot.add(furniture);
-  items=[];doorOpen=false;stairRoute=null;seatedAt=null;closePC();
+  items=[];doorOpen=false;stairRoute=null;seatedAt=null;elevatorRide=null;closePC();
   kind=scenario.kind||'piramide';W=kind==='piramide'?DEFAULT_PYRAMID_WIDTH:20;D=kind==='piramide'?DEFAULT_PYRAMID_DEPTH:12;H=kind==='piramide'?DEFAULT_LEVEL_HEIGHT:3.35;
-  totalFloors=kind==='piramide'?6:1;
+  totalFloors=kind==='piramide'?8:1;
   const app=scenario.appearance||{};
   if(scenario.data){
     const data=scenario.data;
     W=Number(data.width_m)||W;D=Number(data.depth_m)||D;H=Number(data.height_m)||H;
     items=data.objects||[];
     kind=app.buildingPlan==='senati-pyramid'?'piramide':'aula';
-    totalFloors=kind==='piramide'?Math.min(6,Math.max(1,Number(app.floorCount)||6)):1;
+    totalFloors=kind==='piramide'?8:1;
   }
   if(kind==='piramide'){
     building=buildPiramideSENATI(sceneRoot,{width:W,depth:D,levelHeight:H,levels:totalFloors,mode:'transparente',roofVisible:true,
@@ -180,7 +180,7 @@ function buildScene(scenario){
   }else makeGenericRoom();
   setVisibility();currentFloor=0;makeFloorOptions();setFloor(0);resetCamera();
   $('scene-title').textContent=scenario.name;
-  $('status').textContent=kind==='piramide'?'Pirámide V11 con tragaluz central abierto: salones y pasadizos proporcionados. E cerca del ascensor cambia de piso.':'Escenario preparado · Pulsa Empezar recorrido.';
+  $('status').textContent=kind==='piramide'?'Pirámide V12: ocho pisos, tragaluz central vacío, dos escaleras laterales y dos ascensores.':'Escenario preparado · Pulsa Empezar recorrido.';
 }
 async function loadScene(value){
   const selected=sceneEntries.find(s=>s.id===value)||sceneEntries[0];
@@ -255,25 +255,75 @@ function openPC(){
   if(walk.isLocked)walk.unlock();
 }
 function closePC(){pcOpen=false;const panel=$('pc-panel');if(panel)panel.hidden=true;}
-function nearElevator(maxDistance=2.50){
-  if(kind!=='piramide'||!building?.elevator)return false;
-  const el=building.elevator;
-  return Math.hypot(camera.position.x-el.x,camera.position.z-el.accessZ)<maxDistance;
+function nearbyElevator(maxDistance=2.25){
+  if(kind!=='piramide'||!building?.elevators?.length)return null;
+  let best=null,distance=maxDistance;
+  for(const el of building.elevators){
+    const d=Math.hypot(camera.position.x-el.x,camera.position.z-el.accessZ);
+    if(d<distance){distance=d;best=el;}
+  }
+  return best;
 }
-function takeElevator(){
-  if(!nearElevator())return false;
+function moveElevator(el,targetFloor,boarding){
+  if(elevatorRide)return;
+  const fromFloor=el.currentFloor;
+  building.setElevatorDoor(el.id,currentFloor,false);
+  if(boarding){
+    camera.position.set(el.x,currentFloor*H+1.68,el.zBottom+.62);
+    velocity.set(0,0,0);stairRoute=null;
+  }
+  elevatorRide={el,fromFloor,targetFloor,fromY:fromFloor*H,toY:targetFloor*H,
+    elapsed:0,duration:Math.max(1.15,Math.abs(targetFloor-fromFloor)*.62),boarding};
+  $('status').textContent=boarding
+    ?`Ascensor ${el.index+1}: subiendo a la planta ${targetFloor+1}…`
+    :`Ascensor ${el.index+1}: llegando a tu planta…`;
+}
+function useElevator(){
+  const el=nearbyElevator();
+  if(!el)return false;
+  if(elevatorRide){$('status').textContent='El ascensor está en movimiento.';return true;}
+  const landing=el.landingDoors[currentFloor];
+  if(!landing?.open){
+    if(el.currentFloor!==currentFloor){
+      moveElevator(el,currentFloor,false);
+    }else{
+      building.setElevatorDoor(el.id,currentFloor,true);
+      $('status').textContent=`Ascensor ${el.index+1}: puertas abiertas. Pulsa E para entrar y subir una planta.`;
+    }
+    return true;
+  }
   const next=(currentFloor+1)%totalFloors;
-  setFloor(next);
-  camera.position.set(building.elevator.x,next*H+1.68,building.elevator.accessZ);
-  velocity.set(0,0,0);stairRoute=null;
-  $('status').textContent=`Ascensor didáctico: planta ${next+1}. Presiona E para ir a la siguiente planta.`;
+  moveElevator(el,next,true);
   return true;
+}
+function updateElevatorRide(dt){
+  if(!elevatorRide)return;
+  const ride=elevatorRide;
+  ride.elapsed+=dt;
+  const t=THREE.MathUtils.clamp(ride.elapsed/ride.duration,0,1);
+  const smooth=t*t*(3-2*t);
+  const y=THREE.MathUtils.lerp(ride.fromY,ride.toY,smooth);
+  building?.setElevatorCabinLevel(ride.el.id,y);
+  if(ride.boarding)camera.position.y=y+1.68;
+  if(t<1)return;
+  ride.el.currentFloor=ride.targetFloor;
+  elevatorRide=null;
+  if(ride.boarding){
+    currentFloor=ride.targetFloor;
+    setFloor(currentFloor);
+    camera.position.set(ride.el.x,currentFloor*H+1.68,ride.el.accessZ);
+    velocity.set(0,0,0);
+    $('status').textContent=`Llegaste al piso ${currentFloor+1} en el ascensor ${ride.el.index+1}. Pulsa E para volver a usarlo.`;
+  }else{
+    $('status').textContent=`Ascensor ${ride.el.index+1} llegó a tu planta. Pulsa E para abrir sus puertas.`;
+  }
+  building?.setElevatorDoor(ride.el.id,ride.targetFloor,true);
 }
 function interaction(){
   if(pcOpen){closePC();return;}
   if(seatedAt){standFromPC();return;}
   if(nearDoor()){toggleDoor();return;}
-  if(takeElevator())return;
+  if(useElevator())return;
   const door=nearbyClassroomDoor();
   if(door){building.setClassroomDoorOpen(door.floor,door.id,!door.open);$('status').textContent=door.open?'Puerta del aula abierta.':'Puerta del aula cerrada.';return;}
   sitAtPC();
@@ -294,6 +344,14 @@ function canMove(x,z){
     for(const door of building.classroomDoors){
       if(door.floor!==currentFloor||door.open)continue;
       if(Math.abs(z-door.z)<r+.075&&Math.abs(x-door.x)<(door.halfWidth||.84)+r)return false;
+    }
+  }
+  if(kind==='piramide'&&building?.elevators){
+    for(const el of building.elevators){
+      const landing=el.landingDoors[currentFloor];
+      if(landing?.open)continue;
+      const half=(el.xMax-el.xMin)/2;
+      if(Math.abs(z-el.zBottom)<r+.10&&Math.abs(x-el.x)<half+r)return false;
     }
   }
   if(kind==='piramide'&&building?.stairs){
@@ -359,7 +417,8 @@ const clock=new THREE.Clock();
 let currentAction='';
 function tick(){
   const dt=Math.min(clock.getDelta(),.045);
-  if(started&&walk.isLocked&&!pcOpen){
+  updateElevatorRide(dt);
+  if(started&&walk.isLocked&&!pcOpen&&!elevatorRide){
     const forward=Number(keys.has('w')||keys.has('arrowup'))-Number(keys.has('s')||keys.has('arrowdown'));
     const sideways=Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft'));
     const input=new THREE.Vector3(sideways,0,-forward);
@@ -380,7 +439,8 @@ function tick(){
     if(!seatedAt)updateStairs(oldZ);
     const door=nearbyClassroomDoor();
     const pc=nearbyStation();
-    const doorText=seatedAt?'Pulsa F para usar PC · E para levantarte':nearDoor()?'Pulsa E para '+(doorOpen?'cerrar':'abrir')+' la puerta':nearElevator()?'Pulsa E: ascensor hacia el siguiente piso':door?`Pulsa E para ${door.open?'cerrar':'abrir'} la puerta del aula`:pc?`Pulsa E para sentarte en PC-${String(pc.id).padStart(2,'0')}`:'';
+    const lift=nearbyElevator();
+    const doorText=seatedAt?'Pulsa F para usar PC · E para levantarte':nearDoor()?'Pulsa E para '+(doorOpen?'cerrar':'abrir')+' la puerta':lift?(elevatorRide?'Ascensor en movimiento':lift.currentFloor!==currentFloor?'Pulsa E para llamar al ascensor':lift.landingDoors[currentFloor]?.open?'Pulsa E para entrar al ascensor':'Pulsa E para abrir el ascensor') :door?`Pulsa E para ${door.open?'cerrar':'abrir'} la puerta del aula`:pc?`Pulsa E para sentarte en PC-${String(pc.id).padStart(2,'0')}`:'';
     if(doorText!==currentAction){currentAction=doorText;$('walk-tooltip').textContent=doorText;$('walk-tooltip').classList.toggle('visible',!!doorText);}
     $('floor-indicator').textContent=`Piso ${currentFloor+1} / ${totalFloors}`;
   }
