@@ -6,6 +6,7 @@
  */
 import * as THREE from 'three';
 import {carveSlab} from './atrium-geometry.js';
+import {getFirstFloorFrontPlan} from './primer-piso-frente.js';
 import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, EV52_ATRIUM, pyramidScale} from './ev52-layout.js';
 
 const standard = (c,r=.77,met=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:met});
@@ -137,6 +138,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const classroomDoors=[],floorWallBoxes=Array.from({length:levels},()=>[]);
   const wallThickness=.12,wallHeight=levelHeight-.17;
   const floorBounds={left:X(-13.02*56/34),right:X(14.48*56/34),back:Z(-8.70*38/20),front:Z(8.70*38/20)};
+  const firstFloorPlan=getFirstFloorFrontPlan(floorBounds);
   const holes=[...stairsLayout.map(st=>({x0:st.xMin,x1:st.xMax,z0:st.zTop,z1:st.zBottom})),
     ...liftLayouts.map(l=>({x0:l.xMin,x1:l.xMax,z0:l.zTop,z1:l.zBottom})),atrium];
   // Cortar las losas, sin cubrir accidentalmente los huecos del elevador y escaleras.
@@ -201,20 +203,33 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     m.rotation.x=-Math.PI/2;m.position.set(x,y,z);g.add(m);
   }
   function addDoor(g,door,f,base){
-    // Puerta de 1.40 × 2.40 m, independientemente de ancho y fondo globales.
-    const pivot=new THREE.Group();pivot.position.set(door.x-.70,base,door.z);g.add(pivot);
-    box(pivot,1.36,2.40,.052,.68,1.22,0,glass,false);
-    box(pivot,.04,2.40,.07,1.34,1.22,0,elevatorMetal,false);
+    // Ambos sentidos: muro horizontal (side=z) o muro vertical (side=x).
+    const side=door.side==='x'?'x':'z';
+    const doorWidth=Math.max(.85,Math.min(3.65,Number(door.width)||1.40));
+    const half=doorWidth/2;
+    const pivot=new THREE.Group();
+    if(side==='x')pivot.position.set(door.x,base,door.z+half);
+    else pivot.position.set(door.x-half,base,door.z);
+    g.add(pivot);
+    const leaf=new THREE.Group();
+    if(side==='x')leaf.rotation.y=Math.PI/2;
+    pivot.add(leaf);
+    box(leaf,doorWidth-.08,2.40,.052,(doorWidth-.08)/2,1.22,0,glass,false);
+    box(leaf,.04,2.40,.07,doorWidth-.09,1.22,0,elevatorMetal,false);
     classroomDoors.push({floor:f,id:door.id,label:door.label,
-      x:door.x,z:door.z,side:'z',pivot,rotation:-Math.PI*.47,open:false,
-      halfWidth:.72});
-    wallZ(g,door.z,door.x-.72,door.x+.72,base+2.44,Math.max(.05,wallHeight-2.44));
+      x:door.x,z:door.z,side,pivot,rotation:-Math.PI*.47,
+      open:false,halfWidth:half});
+    const headerHeight=Math.max(.05,wallHeight-2.44);
+    if(side==='x')wallX(g,door.x,door.z-half,door.z+half,base+2.44,headerHeight);
+    else wallZ(g,door.z,door.x-half,door.x+half,base+2.44,headerHeight);
   }
   for(let f=0;f<levels;f++){
     const base=f*levelHeight;
     makeSlab(base,f!==0); // Solo planta baja conserva el suelo en el atrio
     const floor=new THREE.Group();floor.name=`Planta ${f+1} · salas, pasillos, dos escaleras y ascensor`;interior.add(floor);
-    for(const s of wallSegments){
+    // Solo en el primer piso: croquis frontal; los demás conservan su trazado.
+    const levelWalls=f===0?firstFloorPlan.walls:wallSegments;
+    for(const s of levelWalls){
       if(s.axis==='z')wallZ(floor,s.z0,s.x0,s.x1,base);
       else wallX(floor,s.x0,s.z0,s.z1,base);
       floorWallBoxes[f].push({
@@ -229,8 +244,13 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       {x0:lf.xMin-.12,x1:lf.xMax+.12,z0:lf.zTop-.12,z1:lf.zTop+.12}
     );
     if(f>0)addAtriumRailing(base,f);
-    for(const door of doors)addDoor(floor,door,f,base);
-    for(const r of rooms){
+    const levelDoors=f===0?firstFloorPlan.doors:doors;
+    for(const door of levelDoors)addDoor(floor,door,f,base);
+    if(f===0){
+      for(const item of firstFloorPlan.labels)
+        placeFloorLabel(floor,item.label,item.x,item.z,Math.min(3.5,Math.max(1.8,item.label.length*.19)),'#295a76',base+.115);
+    }
+    for(const r of (f===0?[]:rooms)){
       const cx=(r.x0+r.x1)/2,cz=(r.z0+r.z1)/2;
       placeFloorLabel(floor,`${f+1} · ${r.label}`,cx,cz,Math.min(2.8,r.x1-r.x0-.20),'#2e5680',base+.09);
       if(r.pcs){
@@ -238,12 +258,15 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
         box(floor,1.05,.08,.56,cx,base+.78,r.z0+.75,deskWood);
       }
     }
-    // Pasillo continuo por detrás del atrio, sin tapar el vacío.
-    const corridorBack=rooms[0].z1+.18;
-    const corridorFront=atrium.z0-.18;
-    const corridorDepth=Math.max(.15,corridorFront-corridorBack);
-    box(floor,atrium.x1-atrium.x0+5,.018,corridorDepth,(atrium.x0+atrium.x1)/2,base+.088,(corridorBack+corridorFront)/2,standard(0xb4d7ce,.95),false);
-    placeFloorLabel(floor,'PASADIZO AL TRAGALUZ',atrium.x1+2.2,(corridorBack+corridorFront)/2,3.9,'#246a61',base+.108);
+    // El pasadizo genérico solo se dibuja en pisos superiores.
+    if(f>0){
+      // Pasillo continuo por detrás del atrio, sin tapar el vacío.
+      const corridorBack=rooms[0].z1+.18;
+      const corridorFront=atrium.z0-.18;
+      const corridorDepth=Math.max(.15,corridorFront-corridorBack);
+      box(floor,atrium.x1-atrium.x0+5,.018,corridorDepth,(atrium.x0+atrium.x1)/2,base+.088,(corridorBack+corridorFront)/2,standard(0xb4d7ce,.95),false);
+      placeFloorLabel(floor,'PASADIZO AL TRAGALUZ',atrium.x1+2.2,(corridorBack+corridorFront)/2,3.9,'#246a61',base+.108);
+    }
     if(f===0){
       box(floor,atrium.x1-atrium.x0,.024,atrium.z1-atrium.z0,(atrium.x0+atrium.x1)/2,base+.101,(atrium.z0+atrium.z1)/2,standard(0xd5d4cf,.88),false);
       placeFloorLabel(floor,'PATIO INTERIOR · PLANTA BAJA',(atrium.x0+atrium.x1)/2,(atrium.z0+atrium.z1)/2,5.0,'#246a61',base+.131);
@@ -402,7 +425,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   return {root,roof,shell,envelope,interior,structure,environment,classroomDoors,setClassroomDoorOpen,
     classroomBounds:corridorBounds,scaleX,scaleZ,width,depth,atrium,atriumGroup,
     setDoorOpen,entry:{x:0,z:entryZ,frontZ:front},stairs:staircases[1],staircases,elevator,elevators,setElevatorDoor,setElevatorCabinLevel,
-    firstFloorWalls:floorWallBoxes[0],floorWallBoxes,firstFloorIsEV52:true,
+    firstFloorWalls:floorWallBoxes[0],floorWallBoxes,firstFloorIsEV52:false,firstFloorPlan,
     walkBounds:{left:floorBounds.left,right:floorBounds.right,back:floorBounds.back},
     setMode(nextMode,nextRoof){useMode({shell,envelope,roof,interior,mode:nextMode,roofVisible:nextRoof});}};
 }
