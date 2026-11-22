@@ -133,7 +133,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const skylightBorder=standard(0x4e6474,.5,.38);
 
   const stairGroup=new THREE.Group();stairGroup.name='Dos escaleras · comunicación vertical';interior.add(stairGroup);
-  const elevatorGroup=new THREE.Group();elevatorGroup.name='Ascensor didáctico · cabina y puertas';interior.add(elevatorGroup);
+  const elevatorGroup=new THREE.Group();elevatorGroup.name='Dos ascensores didácticos · cabinas y puertas';interior.add(elevatorGroup);
   const classroomDoors=[],floorWallBoxes=Array.from({length:levels},()=>[]);
   const wallThickness=.12,wallHeight=levelHeight-.17;
   const floorBounds={left:X(-13.02*56/34),right:X(14.48*56/34),back:Z(-8.70*38/20),front:Z(8.70*38/20)};
