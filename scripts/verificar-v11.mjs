@@ -6,7 +6,7 @@ import {dirname} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {carveSlab,rectangleArea} from '../src/atrium-geometry.js';
 import {getFirstFloorFrontPlan} from '../src/primer-piso-frente.js';
-import {EV52_ATRIUM,EV52_ROOMS,EV52_STAIRWELLS,EV52_ELEVATOR,getPyramidDimensions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH} from '../src/ev52-layout.js';
+import {EV52_ATRIUM,EV52_ROOMS,EV52_STAIRWELLS,EV52_ELEVATORS,EV52_ELEVATOR,getPyramidDimensions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH} from '../src/ev52-layout.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const src=name=>readFileSync(resolve(root,name),'utf8');
 const a=EV52_ATRIUM;
