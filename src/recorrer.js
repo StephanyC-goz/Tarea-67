@@ -27,7 +27,7 @@ let furniture=new THREE.Group();sceneRoot.add(furniture);
 const remotePlayers=new Map();
 const csrfToken=document.querySelector('meta[name="csrf-token"]')?.content||'';
 let multiplayerKey='',multiplayerConnecting=false,multiplayerLoopsStarted=false,multiplayerOnline=false;
-let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=8,elevatorRide=null;
+let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=8,elevatorRide=null,elevatorTargetFloor=null;
 let W=DEFAULT_PYRAMID_WIDTH,D=DEFAULT_PYRAMID_DEPTH,H=DEFAULT_LEVEL_HEIGHT,frontZ=16.8,sideLeft=-21.5,sideRight=24,backZ=-16.55;
 let items=[],collisionBoxes=[],stairRoute=null,stationPositions=[],seatedAt=null,pcOpen=false;
 const keys=new Set();const velocity=new THREE.Vector3();let started=false;
@@ -168,7 +168,7 @@ function buildScene(scenario){
   remoteGroup=new THREE.Group();remoteGroup.name='Jugadores conectados';sceneRoot.add(remoteGroup);
   remotePlayers.clear();
   furniture=new THREE.Group();sceneRoot.add(furniture);
-  items=[];doorOpen=false;stairRoute=null;seatedAt=null;elevatorRide=null;closePC();
+  items=[];doorOpen=false;stairRoute=null;seatedAt=null;elevatorRide=null;elevatorTargetFloor=null;closePC();
   kind=scenario.kind||'piramide';W=kind==='piramide'?DEFAULT_PYRAMID_WIDTH:20;D=kind==='piramide'?DEFAULT_PYRAMID_DEPTH:12;H=kind==='piramide'?DEFAULT_LEVEL_HEIGHT:3.35;
   totalFloors=kind==='piramide'?8:1;
   const app=scenario.appearance||{};
@@ -401,12 +401,17 @@ function useElevator(){
       moveElevator(el,currentFloor,false);
     }else{
       building.setElevatorDoor(el.id,currentFloor,true);
-      $('status').textContent=`Ascensor ${el.index+1}: puertas abiertas. Pulsa E para entrar y subir una planta.`;
+      elevatorTargetFloor=(currentFloor+1)%totalFloors;
+      $('status').textContent=`Ascensor ${el.index+1}: puertas abiertas. Destino inicial: piso ${elevatorTargetFloor+1}. Pulsa 1–8 para elegir y E para entrar.`;
     }
     return true;
   }
-  const next=(currentFloor+1)%totalFloors;
-  moveElevator(el,next,true);
+  const target=elevatorTargetFloor??((currentFloor+1)%totalFloors);
+  if(target===currentFloor){
+    $('status').textContent='Ya estás en ese piso. Elige otro destino del 1 al 8.';
+    return true;
+  }
+  moveElevator(el,target,true);
   return true;
 }
 function updateElevatorRide(dt){
@@ -426,9 +431,11 @@ function updateElevatorRide(dt){
     setFloor(currentFloor);
     camera.position.set(ride.el.x,currentFloor*H+1.68,ride.el.accessZ);
     velocity.set(0,0,0);
-    $('status').textContent=`Llegaste al piso ${currentFloor+1} en el ascensor ${ride.el.index+1}. Pulsa E para volver a usarlo.`;
+    elevatorTargetFloor=null;
+    $('status').textContent=`Llegaste al piso ${currentFloor+1} en el ascensor ${ride.el.index+1}. Pulsa E para abrir o elegir otro destino.`;
   }else{
-    $('status').textContent=`Ascensor ${ride.el.index+1} llegó a tu planta. Pulsa E para abrir sus puertas.`;
+    elevatorTargetFloor=(currentFloor+1)%totalFloors;
+    $('status').textContent=`Ascensor ${ride.el.index+1} llegó a tu planta. Destino inicial: piso ${elevatorTargetFloor+1}; pulsa 1–8 para elegir y E para entrar.`;
   }
   building?.setElevatorDoor(ride.el.id,ride.targetFloor,true);
 }
@@ -553,14 +560,14 @@ function tick(){
     const door=nearbyClassroomDoor();
     const pc=nearbyStation();
     const lift=nearbyElevator();
-    const doorText=seatedAt?'Pulsa F para usar PC · E para levantarte':nearDoor()?'Pulsa E para '+(doorOpen?'cerrar':'abrir')+' la puerta':lift?(elevatorRide?'Ascensor en movimiento':lift.currentFloor!==currentFloor?'Pulsa E para llamar al ascensor':lift.landingDoors[currentFloor]?.open?'Pulsa E para entrar al ascensor':'Pulsa E para abrir el ascensor') :door?`Pulsa E para ${door.open?'cerrar':'abrir'} la puerta del aula`:pc?`Pulsa E para sentarte en PC-${String(pc.id).padStart(2,'0')}`:'';
+    const doorText=seatedAt?'Pulsa F para usar PC · E para levantarte':nearDoor()?'Pulsa E para '+(doorOpen?'cerrar':'abrir')+' la puerta':lift?(elevatorRide?'Ascensor en movimiento':lift.currentFloor!==currentFloor?'Pulsa E para llamar al ascensor':lift.landingDoors[currentFloor]?.open?'Pulsa 1–8 para elegir piso y E para entrar':'Pulsa E para abrir el ascensor') :door?`Pulsa E para ${door.open?'cerrar':'abrir'} la puerta del aula`:pc?`Pulsa E para sentarte en PC-${String(pc.id).padStart(2,'0')}`:'';
     if(doorText!==currentAction){currentAction=doorText;$('walk-tooltip').textContent=doorText;$('walk-tooltip').classList.toggle('visible',!!doorText);}
     $('floor-indicator').textContent=`Piso ${currentFloor+1} / ${totalFloors}`;
   }
   animateRemotePlayers();
   renderer.render(world,camera);
 }
-walk.addEventListener('lock',()=>{started=true;document.body.classList.add('walk-active');$('crosshair').classList.add('visible');$('status').textContent='WASD: caminar · Shift: correr · E: puerta o asiento · F: usar PC · Tab: escenarios · Esc: mouse';});
+walk.addEventListener('lock',()=>{started=true;document.body.classList.add('walk-active');$('crosshair').classList.add('visible');$('status').textContent='WASD: caminar · Shift: correr · E: puertas/ascensor · 1–8: elegir piso · F: PC · Tab: escenarios · Esc: mouse';});
 walk.addEventListener('unlock',()=>{document.body.classList.remove('walk-active');$('crosshair').classList.remove('visible');$('walk-tooltip').classList.remove('visible');keys.clear();velocity.set(0,0,0);});
 $('start-walk').addEventListener('click',()=>walk.lock());
 $('reset-walk').addEventListener('click',()=>{resetCamera();setFloor(0);});
@@ -577,6 +584,16 @@ window.addEventListener('keydown',async e=>{
   const k=e.key.toLowerCase();
   if(walk.isLocked){
     if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift','tab','e','f'].includes(k))e.preventDefault();
+    if(/^[1-8]$/.test(k)&&!e.repeat&&!elevatorRide){
+      const lift=nearbyElevator();
+      if(lift?.landingDoors[currentFloor]?.open){
+        elevatorTargetFloor=Number(k)-1;
+        $('status').textContent=elevatorTargetFloor===currentFloor
+          ?'Ya estás en ese piso. Elige otro destino del 1 al 8.'
+          :`Destino seleccionado: piso ${elevatorTargetFloor+1}. Pulsa E para viajar.`;
+        e.preventDefault();return;
+      }
+    }
     if(k==='e'&&!e.repeat)interaction();
     if(k==='f'&&!e.repeat)openPC();
     if(k==='tab'&&!e.repeat){
@@ -587,7 +604,7 @@ window.addEventListener('keydown',async e=>{
       walk.unlock();await loadScene(next.id);
       $('status').textContent='Escenario cambiado. Pulsa Empezar recorrido para continuar.';
     }
-    if(!['e','f','tab'].includes(k))keys.add(k);
+    if(!['e','f','tab'].includes(k)&&! /^[1-8]$/.test(k))keys.add(k);
   }
 });
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
