@@ -382,7 +382,11 @@ function moveElevator(el,targetFloor,boarding){
   const fromFloor=el.currentFloor;
   building.setElevatorDoor(el.id,currentFloor,false);
   if(boarding){
-    camera.position.set(el.x,currentFloor*H+1.68,el.zBottom+.62);
+    // La posición anterior (zBottom + .62) quedaba FUERA del pozo y
+    // desplazaba al jugador a través de las paredes al empezar el viaje.
+    // Subir dentro de la cabina, al otro lado de las hojas de acceso.
+    const insideZ=el.zBottom-Math.min(.52,(el.zBottom-el.zTop)*.32);
+    camera.position.set(el.x,currentFloor*H+1.68,insideZ);
     velocity.set(0,0,0);stairRoute=null;
   }
   elevatorRide={el,fromFloor,targetFloor,fromY:fromFloor*H,toY:targetFloor*H,
