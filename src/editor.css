@@ -53,3 +53,11 @@ body.walk-mode #viewport canvas{pointer-events:auto}
 .pyramid-reference-grid a{color:#1553a6;text-align:center;font-size:11px;text-decoration:none;font-weight:700;}
 .pyramid-reference-grid img{width:100%;height:82px;object-fit:cover;border-radius:8px;display:block;margin-bottom:4px;border:1px solid #d6e1f0;}
 #pyramid-controls[hidden]{display:none!important;}
+
+/* Proyecto unificado: detalles visuales, sin cambiar herramientas ni posiciones 3D. */
+.topbar{box-shadow:0 4px 18px #12396714;background:linear-gradient(180deg,#fff,#f9fbff)}
+.top-actions a,.top-actions button{transition:background .16s ease,box-shadow .16s ease,transform .16s ease}
+.top-actions a:hover,.top-actions button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 6px 15px #183b6c19}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #46b6fa;outline-offset:2px}
+button:disabled{cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}.top-actions a:hover,.top-actions button:not(:disabled):hover{transform:none}}
