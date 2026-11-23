@@ -18,3 +18,20 @@
 /* V12 - presencia multijugador */
 .multiplayer-status{max-width:min(34vw,360px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d8fbe8!important;background:#0b513ac9!important;font-weight:800}
 @media(max-width:760px){.viewer-bottom{gap:6px;left:8px;right:8px}.viewer-bottom>*{font-size:10px;padding:6px 8px}.multiplayer-status{max-width:34vw}}
+
+/* Proyecto unificado: mejorar legibilidad, accesibilidad y el HUD del recorrido. */
+.app-nav{background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 3px 14px #163d7714;z-index:3}
+.walk-sidebar{scrollbar-width:thin;scrollbar-color:#a2bcda #f3f7fd}
+.walk-sidebar h1{letter-spacing:-.035em;line-height:1.15}
+.walk-sidebar button,.nav-buttons a,.nav-buttons button{transition:background .15s ease,transform .15s ease,box-shadow .15s ease}
+.walk-sidebar button:not(:disabled):hover,.nav-buttons a:hover,.nav-buttons button:hover{transform:translateY(-1px);box-shadow:0 6px 18px #133c721c}
+.walk-sidebar button.primary{background:linear-gradient(125deg,#1555bc,#2786e9)}
+.walk-sidebar select:focus-visible,.walk-sidebar input:focus-visible,.walk-sidebar button:focus-visible,.nav-buttons a:focus-visible,.nav-buttons button:focus-visible,.pc-panel button:focus-visible,.pc-panel a:focus-visible{outline:3px solid #4cb6f6;outline-offset:2px}
+.viewer-top,.viewer-bottom{gap:9px}
+.viewer-top>*,.viewer-bottom>*{border:1px solid #d4e8ff24;box-shadow:0 8px 23px #020c2350;background:#081f42dc;backdrop-filter:blur(12px)}
+.walk-tooltip{max-width:min(90vw,420px);line-height:1.45;box-shadow:0 15px 40px #020a2059}
+.setup-warning{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,90%);max-height:85vh;overflow:auto;box-shadow:0 20px 55px #0e203a55}
+.nav-buttons a,.nav-buttons button{font-size:12px;font-weight:800}
+@media(max-width:1000px) and (min-width:761px){.content{grid-template-columns:275px minmax(0,1fr)}.walk-sidebar{padding:16px}.app-nav{flex-wrap:wrap}}
+@media(max-width:760px){.walk-sidebar{max-height:35svh}.viewer-top{left:8px;right:8px;top:8px;flex-wrap:wrap}.viewer-bottom{left:8px;right:8px;bottom:8px;flex-wrap:wrap;justify-content:center}}
+@media(prefers-reduced-motion:reduce){.walk-sidebar button,.nav-buttons a,.nav-buttons button{transition:none}.walk-sidebar button:not(:disabled):hover,.nav-buttons a:hover,.nav-buttons button:hover{transform:none}}
