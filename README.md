@@ -1,3 +1,11 @@
+# Proyecto unificado — Inicio rápido (actual)
+
+**Usa [PANEL_UNIFICADO.html](PANEL_UNIFICADO.html) como puerta de entrada.** Para instalar en Laragon desde una PC nueva, sigue [GUIA_PROYECTO_UNIFICADO.md](GUIA_PROYECTO_UNIFICADO.md) y ejecuta `INSTALAR_UNIFICADO.ps1` desde PowerShell. La rama `proyecto-unificado` integra el motor vigente con el módulo exterior `modulos/fachada-original` y conserva las versiones anteriores sin cambios bajo `archivo-original`.
+
+La ubicación de las escaleras del motor actual se revisó con el croquis del primer piso: ambas están en el sector superior derecho. El módulo exterior original conserva su propia geometría histórica; **no se reemplazaron sus formas ni materiales**. Las pruebas interactivas 3D finales deben realizarse en Laragon tras `npm ci`, `npm run check` y `npm run build`.
+
+---
+
 # Pirámide SENATI 3D — Versión V12
 
 **Empieza por [INSTRUCCIONES_V12.md](INSTRUCCIONES_V12.md).** Esta actualización incorpora **ocho pisos**, mantiene el espacio central libre y conserva únicamente un lucernario traslúcido en la cubierta, coloca **dos escaleras laterales de 2,8 m de ancho nominal** en extremos opuestos y agrupa **dos ascensores** en un mismo lateral junto a los salones. Incluye recorrido en primera persona y multijugador con avatares, nombres y posiciones sincronizadas mediante PHP/MySQL. Consulta el plano en [VISTA_DIMENSIONES_V12.html](VISTA_DIMENSIONES_V12.html).
