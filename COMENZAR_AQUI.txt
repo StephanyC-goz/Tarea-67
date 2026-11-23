@@ -1,3 +1,18 @@
+PIRAMIDE SENATI 3D - PROYECTO UNIFICADO (ACTUAL)
+
+Abre GUIA_PROYECTO_UNIFICADO.md antes de instalar.
+Desde la carpeta extraida ejecuta en PowerShell:
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\\INSTALAR_UNIFICADO.ps1"
+
+Entrada unica: http://localhost/piramide_senati_fusion/PANEL_UNIFICADO.html
+Si Laragon usa puerto 8080: http://localhost:8080/piramide_senati_fusion/PANEL_UNIFICADO.html
+
+El instalador conserva la carpeta anterior como respaldo y no borra MySQL.
+Para base nueva importa database/schema.sql (aula3d).
+El paquete NO incluye cuentas ni escenarios guardados de la PC antigua.
+
+----- DOCUMENTACION HISTORICA ORIGINAL (V10) -----
+
 PIRÁMIDE SENATI V10 — PROPORCIONES CORREGIDAS (6 PISOS)
 
 MEJORA PRINCIPAL: se eliminó el estiramiento 3D de la V9. El ancho y
