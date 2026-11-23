@@ -15,7 +15,7 @@ const required=[
   'src/piramide-senati.js','src/recorrer.js','src/primer-piso-frente.js',
   'src/exterior-campus.js','src/exterior-navigation.js','src/exterior-preview.js',
   'PANEL_UNIFICADO.html','FACHADA_EXTERIOR.html','GUIA_PROYECTO_UNIFICADO.md',
-  'INSTALAR_UNIFICADO.ps1','public/assets/editor.js','public/assets/recorrer.js',
+  'INSTALAR_UNIFICADO.ps1','COMPROBAR_INSTALACION.php','public/assets/editor.js','public/assets/recorrer.js',
   'modulos/fachada-original/FACHADA_EXTERIOR.html',
   'modulos/fachada-original/src/exterior-campus.js',
   'modulos/fachada-original/public/assets/exterior-preview.js',
