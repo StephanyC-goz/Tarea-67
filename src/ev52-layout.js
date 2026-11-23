@@ -81,13 +81,13 @@ wallZ(utilityFront,-10.02*56/34,utilityX1);
 // Un espacio libre detrás del acceso; no colocar tabique atravesando la puerta.
 doors.push(Object.freeze({id:'servicios-izquierda',label:'Servicios',x:-10.70*56/34,z:utilityFront,side:'z'}));
 
-// Croquis frontal de noviembre 2026: AMBAS escaleras se encuentran en el
-// sector superior derecho, no entre los salones ni atravesando sus puertas.
-// Dos tramos separados de 2.80 m de ancho y 7.64 m de longitud (maqueta).
-// Estas cotas son una interpretación visual, no un diseño normativo de evacuación.
+// Ambas escaleras quedan COMPLETAMENTE dentro del bloque superior derecho
+// dibujado por el usuario: el borde frontal del ambiente esta en z ≈ -9.19.
+// Anteriormente zBottom=-8.56 cruzaba ese muro y salia al pasadizo.
+// Tramos didacticos de 2.80 m x 6.71 m; peldaños y rampas se recalculan.
 export const EV52_STAIRWELLS=Object.freeze([
-  Object.freeze({id:'escalera-1',name:'Escalera derecha A',x:17.90,xMin:16.50,xMax:19.30,zTop:-16.20,zBottom:-8.56,clearWidth:2.80}),
-  Object.freeze({id:'escalera-2',name:'Escalera derecha B',x:21.60,xMin:20.20,xMax:23.00,zTop:-16.20,zBottom:-8.56,clearWidth:2.80})
+  Object.freeze({id:'escalera-1',name:'Escalera derecha A',x:17.90,xMin:16.50,xMax:19.30,zTop:-16.24,zBottom:-9.53,clearWidth:2.80}),
+  Object.freeze({id:'escalera-2',name:'Escalera derecha B',x:21.60,xMin:20.20,xMax:23.00,zTop:-16.24,zBottom:-9.53,clearWidth:2.80})
 ]);
 // Dos ascensores agrupados en el lateral derecho, junto a la franja de salones.
 // Ambos quedan fuera de la proyección del tragaluz y dentro de los límites del edificio.
