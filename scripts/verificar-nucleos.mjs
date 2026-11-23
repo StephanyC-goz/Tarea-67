@@ -42,7 +42,15 @@ for(const {width,depth} of configs){
     const usableDoors=doorsOutsideCores(f===0?plan.doors:doors,cores);
     validate(segments.length>0&&usableDoors.length>0,
       `Planta ${f+1} sin muros ni puertas en ${width}x${depth}`);
-    if(f===0)validate(usableDoors.length===8,'No eliminar puertas verdes de planta baja');
+    if(f===0){
+      validate(usableDoors.length===8,'No eliminar puertas verdes de planta baja');
+      // La pared frontal del bloque superior derecho debe permanecer ENTERA.
+      const frontal=segments.find(w=>w.axis==='z'&&w.x0>12*sx&&w.x1>22*sx
+        &&w.z0<-7*sz&&w.z0>-11*sz);
+      validate(Boolean(frontal),'Se perdio el muro frontal de la zona de escaleras');
+      validate(stairs.every(st=>st.zBottom<frontal.z0-.25*sz),
+        'Los peldaños sobresalen al pasadizo y atraviesan la pared frontal');
+    }
     for(const wall of segments)for(const c of cores)
       validate(!intersects(segmentFootprint(wall),c,.19),
         `Muro atravesando ${c.id} en planta ${f+1} (${width}x${depth})`);
