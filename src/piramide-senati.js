@@ -6,6 +6,7 @@
  */
 import * as THREE from 'three';
 import {carveSlab} from './atrium-geometry.js';
+import {coreRects,clipWallsAgainstCores,doorsOutsideCores} from './nucleos-geometria.js';
 import {getFirstFloorFrontPlan} from './primer-piso-frente.js';
 import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, EV52_ATRIUM, pyramidScale} from './ev52-layout.js';
 
@@ -138,6 +139,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const classroomDoors=[],floorWallBoxes=Array.from({length:levels},()=>[]);
   const wallThickness=.12,wallHeight=levelHeight-.17;
   const floorBounds={left:X(-13.02*56/34),right:X(14.48*56/34),back:Z(-8.70*38/20),front:Z(8.70*38/20)};
+  const coreExclusions=coreRects(stairsLayout,liftLayouts);
   const firstFloorPlan=getFirstFloorFrontPlan(floorBounds,[...stairsLayout,...liftLayouts]);
   const holes=[...stairsLayout.map(st=>({x0:st.xMin,x1:st.xMax,z0:st.zTop,z1:st.zBottom})),
     ...liftLayouts.map(l=>({x0:l.xMin,x1:l.xMax,z0:l.zTop,z1:l.zBottom})),atrium];
@@ -228,7 +230,9 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     makeSlab(base,f!==0); // Solo planta baja conserva el suelo en el atrio
     const floor=new THREE.Group();floor.name=`Planta ${f+1} · salas, pasillos, dos escaleras y ascensor`;interior.add(floor);
     // Solo en el primer piso: croquis frontal; los demás conservan su trazado.
-    const levelWalls=f===0?firstFloorPlan.walls:wallSegments;
+    // Se dibuja y colisiona SOLO la geometría realmente libre de núcleos.
+    // El mismo recorte se aplica en TODAS las plantas y en cualquier escala.
+    const levelWalls=clipWallsAgainstCores(f===0?firstFloorPlan.walls:wallSegments,coreExclusions);
     for(const s of levelWalls){
       if(s.axis==='z')wallZ(floor,s.z0,s.x0,s.x1,base);
       else wallX(floor,s.x0,s.z0,s.z1,base);
@@ -244,7 +248,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       {x0:lf.xMin-.12,x1:lf.xMax+.12,z0:lf.zTop-.12,z1:lf.zTop+.12}
     );
     if(f>0)addAtriumRailing(base,f);
-    const levelDoors=f===0?firstFloorPlan.doors:doors;
+    const levelDoors=doorsOutsideCores(f===0?firstFloorPlan.doors:doors,coreExclusions);
     for(const door of levelDoors)addDoor(floor,door,f,base);
     if(f===0){
       for(const item of firstFloorPlan.labels)
