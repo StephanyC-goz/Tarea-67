@@ -39,7 +39,7 @@ $assetVersion = $frontendReady ? (string) max((int) filemtime($builtJs), (int) f
       <div class="brand-copy"><strong>Dirección Nacional SENATI · 3D</strong><small>Fachada, pisos, editor y simulador de emergencias</small></div>
     </div>
     <div class="top-actions">
-      <a class="btn btn-light-full" href="./recorrer.php">Recorrer escenarios</a><a class="btn btn-light-full" href="./admin.php">Administración</a><a class="btn btn-light-full" href="./diagnostico.php" title="Comprobar dependencias">Diagnóstico</a>
+      <a class="btn btn-light-full" href="./PANEL_UNIFICADO.html">Portal</a><a class="btn btn-light-full" href="./recorrer.php">Recorrer escenarios</a><a class="btn btn-light-full" href="./admin.php">Administración</a><a class="btn btn-light-full" href="./diagnostico.php" title="Comprobar dependencias">Diagnóstico</a>
       <label class="scenario-name"><span>Escenario:</span><input id="scenario-name" value="Dirección Nacional SENATI · Pirámide" maxlength="100"></label>
       <button class="btn btn-primary" id="new-scene"><span class="btn-symbol">＋</span> Nuevo</button>
       <button class="btn btn-primary" id="save-scene"><span class="btn-symbol">▣</span> Guardar</button>
