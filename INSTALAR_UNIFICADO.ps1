@@ -12,7 +12,7 @@ Write-Host '=== PIRAMIDE SENATI | INSTALACION UNIFICADA ===' -ForegroundColor Cy
 if (-not (Test-Path -LiteralPath (Join-Path $Origen 'config\auth.php'))) {
     throw 'ZIP/carpeta incorrecta: falta config\auth.php en la raiz extraida.'
 }
-foreach ($nombre in @('registro.php','login.php','src\piramide-senati.js','database\schema.sql','PANEL_UNIFICADO.html','modulos\fachada-original\FACHADA_EXTERIOR.html')) {
+foreach ($nombre in @('registro.php','login.php','src\piramide-senati.js','database\schema.sql','PANEL_UNIFICADO.html','COMPROBAR_INSTALACION.php','modulos\fachada-original\FACHADA_EXTERIOR.html')) {
     if (-not (Test-Path -LiteralPath (Join-Path $Origen $nombre))) {
         throw ('Falta archivo del paquete: ' + $nombre)
     }
