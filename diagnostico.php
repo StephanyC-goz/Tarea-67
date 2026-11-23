@@ -7,7 +7,7 @@ if(!in_array($client,['127.0.0.1','::1'],true)){http_response_code(403);exit('So
 $checks=[];
 $checks['PHP ≥ 8.1']=version_compare(PHP_VERSION,'8.1.0','>=')?'OK':'Error: actualiza PHP';
 $checks['Extensión PDO MySQL']=in_array('mysql',PDO::getAvailableDrivers(),true)?'OK':'Falta habilitar pdo_mysql';
-foreach(['public/assets/editor.js','public/assets/simulator.js','public/assets/recorrer.js','public/assets/editor.css','index.php','api/scenarios.php','referencias/senati_frontal.jpg'] as $name){
+foreach(['public/assets/editor.js','public/assets/simulator.js','public/assets/recorrer.js','public/assets/editor.css','config/auth.php','config/database.php','database/schema.sql','PANEL_UNIFICADO.html','modulos/fachada-original/FACHADA_EXTERIOR.html','index.php','api/scenarios.php','referencias/senati_frontal.jpg'] as $name){
 $checks[$name]=is_file(__DIR__.'/'.$name)&&filesize(__DIR__.'/'.$name)>0?'OK':'Falta archivo';}
 try{require_once __DIR__.'/config/database.php';$db=db();$db->query('SELECT id FROM scenarios LIMIT 1');$db->query('SELECT id FROM scenario_versions LIMIT 1');$checks['Conexión MySQL + tablas']='OK';}
 catch(Throwable $e){$checks['Conexión MySQL + tablas']='No configurada. Importa database/schema.sql o ACTUALIZAR_BD_EXISTENTE.sql';}
