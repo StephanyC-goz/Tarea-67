@@ -186,7 +186,7 @@ function buildScene(scenario){
   }else makeGenericRoom();
   setVisibility();currentFloor=0;makeFloorOptions();setFloor(0);resetCamera();
   $('scene-title').textContent=scenario.name;
-  $('status').textContent=kind==='piramide'?'Pirámide V12: ocho pisos, tragaluz central vacío, dos escaleras laterales y dos ascensores.':'Escenario preparado · Pulsa Empezar recorrido.';
+  $('status').textContent=kind==='piramide'?'Pirámide V12: ocho pisos, tragaluz central vacío, dos escaleras en la zona superior derecha y dos ascensores.':'Escenario preparado · Pulsa Empezar recorrido.';
 }
 async function loadScene(value){
   const selected=sceneEntries.find(s=>s.id===value)||sceneEntries[0];
