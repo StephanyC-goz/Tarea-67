@@ -1,0 +1,17 @@
+VALIDACION DE LA VERSION FUSIONADA
+
+- Sintaxis JavaScript (editor, simulador, navegacion, modelos, piramide): CORRECTA.
+- Sintaxis PHP (index, simulador, API, diagnostico): CORRECTA.
+- IDs de controles HTML utilizados por editor.js y simulator.js: TODOS PRESENTES.
+- Modelo Piramide: integrado en editor y simulador, con fuentes fotografias.
+- SQL: tablas escenarios, objetos, catalogo, versiones e historial de simulaciones.
+- Servidor PHP de prueba: index.php 200, diagnostico.php 200.
+- Conexión real a MySQL: NO PROBADA (no hay MySQL del usuario en este entorno).
+- Compilación Vite/Three.js: NO PROBADA (npm no pudo descargar dependencias aquí).
+- Renderizado WebGL/visualización en navegador: NO PROBADO.
+
+PARA USAR LA MAQUETA REAL, EN VS CODE EN LA CARPETA DEL PROYECTO:
+  npm install
+  npm run build
+
+LUEGO: INICIA Apache/MySQL de Laragon e importa database/schema.sql.

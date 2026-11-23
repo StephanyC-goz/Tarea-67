@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pirámide SENATI V9 · Dimensiones orientativas</title>
+<style>
+:root{color-scheme:light;--navy:#102b45;--ink:#1f3446;--muted:#5c6d7e;--cyan:#0d777b;--line:#d6e2e9}
+*{box-sizing:border-box}body{margin:0;background:#f3f7f8;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:26px 6%;background:var(--navy);color:#fff}header h1{font-size:clamp(22px,3vw,36px);margin:5px 0 3px}header p{margin:0;opacity:.83}
+main{max-width:1400px;margin:auto;padding:24px 26px 50px}a{color:inherit}a.back{font-weight:700;color:#1a7687}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px #102b4510;padding:20px;margin-top:18px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:20px;margin:14px 0 10px}
+.controls label{font-weight:700;font-size:14px;display:block}.controls output{float:right;color:var(--cyan)}input[type=range]{width:100%;accent-color:var(--cyan);margin-top:12px}
+.note{color:var(--muted);font-size:13px;line-height:1.55;margin:9px 0}.diagram{overflow:auto;background:#f9fbfc;border:1px solid var(--line);border-radius:12px;padding:8px}
+#plant{display:block;width:100%;min-width:760px;aspect-ratio:1.9/1}svg text{font-family:system-ui,Segoe UI,sans-serif;pointer-events:none;user-select:none}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:10px}.stat{background:#edf5f6;padding:16px;border-radius:10px}.stat strong{display:block;color:#0d6976;font-size:23px}.stat span{display:block;color:#536679;font-size:12px;margin-top:3px}
+.rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:16px}.room{padding:10px 13px;border:1px solid var(--line);border-radius:8px;font-size:13px}.room b{display:block;margin-bottom:4px}
+footer{color:var(--muted);font-size:13px;line-height:1.6;margin-top:18px}
+@media(max-width:850px){main{padding:12px}.controls{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(130px,1fr))}}
+</style>
+</head><body>
+<header><small>VISOR DIDÁCTICO DE PLANTA</small><h1>Pirámide SENATI · Escala ajustable V9</h1><p>Compara medidas de aulas, vestíbulo, escaleras y ascensor en una maqueta conceptual.</p></header>
+<main>
+<a class="back" href="index.php">Volver al editor 3D</a> · <a class="back" href="recorrer.php">Abrir recorrido</a>
+<section class="panel">
+  <h2>Dimensiones del modelo</h2>
+  <div class="controls">
+    <label>Ancho referencial del conjunto <output id="outWidth">56 m</output><input id="width" type="range" min="40" max="80" step="1" value="56"></label>
+    <label>Profundidad referencial del conjunto <output id="outDepth">38 m</output><input id="depth" type="range" min="28" max="60" step="1" value="38"></label>
+    <label>Altura por planta <output id="outHeight">3,8 m</output><input id="height" type="range" min="3" max="5" step=".1" value="3.8"></label>
+  </div>
+  <p class="note">Estos controles muestran una vista previa: para aplicar dimensiones al edificio 3D, utiliza <b>Editor → Ancho / Largo / Altura → Aplicar dimensiones</b>. Ninguna cifra corresponde a mediciones certificadas de la sede real.</p>
+  <div class="diagram"><svg id="plant" viewBox="0 0 1200 680" role="img" aria-label="Esquema de distribución con 10 ambientes, vestíbulo, dos escaleras y ascensor"></svg></div>
+  <p class="note">Los accesos de cada sala están abiertos en el croquis virtual. La planta baja se basa en las relaciones espaciales de la imagen facilitada; plantas 2–6 se distribuyen como aulas didácticas, no como reconstrucción documentada.</p>
+</section>
+<section class="panel"><h2>Medidas orientativas calculadas</h2><div class="stats" id="stats"></div><div class="rooms" id="rooms"></div></section>
+<footer>Maqueta educativa: no usar para estimar aforo, verificar evacuación, accesibilidad, estructuras o medidas de construcción. El ascensor del recorrido cambia de planta de forma simulada.</footer>
+</main>
+<script type="module">
+import {EV52_ROOMS,EV52_WALL_SEGMENTS,EV52_DOORS,EV52_STAIRWELLS,EV52_ELEVATOR,getPyramidDimensions} from './assets/ev52-layout-public.js';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+const svg=$('plant');
+const svgNode=(tag,attrs={},text)=>{const el=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;return el;};
+function draw(){
+ const w=+$('width').value,d=+$('depth').value,h=+$('height').value;
+ $('outWidth').textContent=`${w} m`;$('outDepth').textContent=`${d} m`;$('outHeight').textContent=`${h.toFixed(1).replace('.',',')} m`;
+ const m=getPyramidDimensions(w,d),sx=m.scaleX,sz=m.scaleZ;
+ const x0=-13.15,x1=14.55,z0=-8.80,z1=8.82;
+ const scale=Math.min(1000/((x1-x0)*sx),555/((z1-z0)*sz));
+ const X=x=>600+(x-(x0+x1)/2)*sx*scale,Z=z=>336+(z-(z0+z1)/2)*sz*scale;
+ svg.replaceChildren();
+ svg.append(svgNode('rect',{x:0,y:0,width:1200,height:680,fill:'#f9fbfc'}));
+ const pt=(x0,z0,x1,z1,attrs)=>svgNode('rect',{x:X(x0),y:Z(z0),width:(x1-x0)*sx*scale,height:(z1-z0)*sz*scale,...attrs});
+ svg.append(pt(x0,z0,x1,z1,{fill:'#eff4f7',stroke:'#1c3b53','stroke-width':2}));
+ // Camino central y vestíbulo exterior, despejados visualmente.
+ svg.append(pt(-8.65,-3.24,9.25,2.36,{fill:'#dfeeed',stroke:'none'}));
+ svg.append(pt(-8.65,-3.24,9.25,-1.54,{fill:'#b4d7ce',stroke:'none'}));
+ const hall=svgNode('text',{x:X(0),y:Z(-.3),fill:'#2c686b','font-size':16,'font-weight':700,'text-anchor':'middle'},'VESTÍBULO CENTRAL');svg.append(hall);
+ svg.append(svgNode('text',{x:X(0),y:Z(-2.36),'font-size':11,'text-anchor':'middle',fill:'#22645e','font-weight':700},`PASADIZO ${m.corridorWidth.toFixed(1)} m`));
+ for(const r of EV52_ROOMS){
+   svg.append(pt(r.x0,r.z0,r.x1,r.z1,{fill:r.side==='upper'?'#d9e9f4':'#efead9',stroke:'none'}));
+   const cx=(r.x0+r.x1)/2,cz=(r.z0+r.z1)/2;
+   svg.append(svgNode('text',{x:X(cx),y:Z(cz)-7,'font-size':14,'font-weight':800,'text-anchor':'middle',fill:'#21415c'},r.id));
+   const real=m.rooms.find(z=>z.id===r.id);
+   svg.append(svgNode('text',{x:X(cx),y:Z(cz)+12,'font-size':11,'text-anchor':'middle',fill:'#38556a'},`${real.width.toFixed(1)} × ${real.depth.toFixed(1)} m`));
+ }
+ for(const [i,st] of EV52_STAIRWELLS.entries()){
+  svg.append(pt(st.xMin,st.zTop,st.xMax,st.zBottom,{fill:'#f0dcce',stroke:'#b86c33','stroke-width':2}));
+  for(let n=1;n<10;n++)svg.append(svgNode('line',{x1:X(st.xMin),x2:X(st.xMax),y1:Z(st.zTop+(st.zBottom-st.zTop)*n/10),y2:Z(st.zTop+(st.zBottom-st.zTop)*n/10),stroke:'#b86c33','stroke-width':1}));
+  svg.append(svgNode('text',{x:X(st.x),y:Z(st.zTop)-7,'font-size':12,'text-anchor':'middle','font-weight':700,fill:'#934c20'},`ESC. ${i+1}`));
+ }
+ const e=EV52_ELEVATOR;
+ svg.append(pt(e.xMin,e.zTop,e.xMax,e.zBottom,{fill:'#c6ecee',stroke:'#0b7a82','stroke-width':3}));
+ svg.append(svgNode('text',{x:X(e.x),y:Z((e.zTop+e.zBottom)/2),'font-size':12,'text-anchor':'middle','font-weight':700,fill:'#066e75'},'LIFT'));
+ for(const line of EV52_WALL_SEGMENTS) svg.append(svgNode('line',{x1:X(line.x0),y1:Z(line.z0),x2:X(line.x1),y2:Z(line.z1),stroke:'#293d4c','stroke-width':3,'stroke-linecap':'square'}));
+ for(const door of EV52_DOORS){svg.append(svgNode('line',{x1:X(door.x-.6),y1:Z(door.z),x2:X(door.x+.6),y2:Z(door.z),stroke:'#3ba77f','stroke-width':4}));}
+ svg.append(svgNode('path',{d:`M ${X(-1)} ${Z(8.82)} L ${X(1)} ${Z(8.82)}`,stroke:'#148c75','stroke-width':8}));
+ svg.append(svgNode('text',{x:X(0),y:Z(8.82)+20,'text-anchor':'middle','font-size':14,'font-weight':700,fill:'#13695c'},'INGRESO PRINCIPAL'));
+ svg.append(svgNode('text',{x:30,y:35,fill:'#354a5b','font-size':20,'font-weight':800},`PLANTA 1 · MODELO ${w} × ${d} m`));
+ svg.append(svgNode('text',{x:30,y:60,fill:'#66798b','font-size':12},'Dimensiones virtuales, no levantamiento arquitectónico'));
+ $('stats').innerHTML='';
+ for(const [value,label] of [[`${w} × ${d} m`,'Dimensiones generales'],[`${m.exampleClassroom.width.toFixed(1)} × ${m.exampleClassroom.depth.toFixed(1)} m`,'Aula superior N3'],[`${m.staircase.width.toFixed(1)} × ${m.staircase.length.toFixed(1)} m`,'Cada tramo de escalera'],[`${m.elevator.width.toFixed(1)} × ${m.elevator.depth.toFixed(1)} m`,'Hueco del ascensor'],[`${m.corridorWidth.toFixed(1)} m`,'Ancho del pasadizo'],[`${m.centralHallWidth.toFixed(1)} m`,'Vestíbulo + pasadizo'],[`${(6*h).toFixed(1)} m`,'Seis alturas de planta']]){
+  const el=document.createElement('div');el.className='stat';el.innerHTML=`<strong>${value}</strong><span>${label}</span>`;$('stats').append(el);
+ }
+ $('rooms').replaceChildren(...m.rooms.map(r=>{const el=document.createElement('div');el.className='room';const n=document.createElement('b');n.textContent=`${r.id} · ${r.label}`;const t=document.createElement('span');t.textContent=`${r.width.toFixed(1)} m de ancho × ${r.depth.toFixed(1)} m de fondo`;el.append(n,t);return el;}));
+}
+for(const id of ['width','depth','height'])$(id).addEventListener('input',draw);
+draw();
+</script></body></html>

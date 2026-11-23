@@ -1,0 +1,324 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a2345">
+
+  <title>SENATI 3D | Recorrido multijugador</title>
+
+  <link rel="stylesheet" href="./assets/recorrer.css">
+</head>
+
+<body>
+<div class="walk-app">
+
+  <header class="app-nav">
+    <a class="brand" href="recorrer.html">
+      <span class="brand-icon">S</span>
+      <span>
+        <b>SENATI · 3D</b>
+        <small>Dirección Nacional · recorrido interactivo</small>
+      </span>
+    </a>
+
+    <div class="nav-buttons">
+      <span class="welcome">
+        Hola, Visitante · Modo prueba
+      </span>
+      <a href="FACHADA_EXTERIOR.html">Ver fachada</a>
+      <a href="recorrer.html">Recorrido</a>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <aside class="walk-sidebar">
+
+      <div class="eyebrow">CENTRO DE ESCENARIOS</div>
+
+      <h1>Explora el edificio</h1>
+
+      <p>
+        Recorre los escenarios 3D de SENATI
+        y conecta jugadores mediante Firebase.
+      </p>
+
+      <!-- ESCENARIOS -->
+      <label for="scenario-select">
+        Escenario
+        <select id="scenario-select">
+          <option value="piramide">
+            Pirámide SENATI · 6 pisos
+          </option>
+          <option value="aula">
+            Aula de cómputo · 20 estaciones
+          </option>
+        </select>
+      </label>
+
+      <label for="floor-select">
+        Planta
+        <select id="floor-select"></select>
+      </label>
+
+      <button
+        class="primary"
+        id="start-walk"
+        type="button">
+        ▶ Empezar recorrido
+      </button>
+
+      <button
+        class="secondary"
+        id="reset-walk"
+        type="button">
+        Reiniciar posición
+      </button>
+
+      <button
+        class="secondary"
+        id="door-button"
+        type="button">
+        Interactuar · puerta / ascensor / asiento (E)
+      </button>
+
+      <div class="walk-quick-actions">
+
+        <button
+          class="secondary"
+          id="sit-button"
+          type="button">
+          Sentarse (E)
+        </button>
+
+        <button
+          class="primary"
+          id="pc-button"
+          type="button"
+          disabled>
+          Usar PC (F)
+        </button>
+
+      </div>
+
+      <!-- AJUSTES -->
+      <div class="settings">
+
+        <h2>Ajustes de cámara</h2>
+
+        <label>
+          Velocidad
+          <output id="speed-value">6.5</output> m/s
+
+          <input
+            id="speed"
+            type="range"
+            min="3"
+            max="12"
+            step=".5"
+            value="6.5">
+        </label>
+
+        <label>
+          Sensibilidad del ratón
+          <output id="sensitivity-value">0.85</output>
+
+          <input
+            id="sensitivity"
+            type="range"
+            min=".35"
+            max="1.8"
+            step=".05"
+            value=".85">
+        </label>
+
+        <label>
+          Campo de visión
+          <output id="fov-value">78</output>°
+
+          <input
+            id="fov"
+            type="range"
+            min="60"
+            max="95"
+            step="1"
+            value="78">
+        </label>
+
+      </div>
+
+      <p class="academic">
+        <a
+          href="VISTA_DIMENSIONES_V9.html"
+          target="_blank"
+          rel="noopener">
+          Ver plano con medidas
+        </a>
+      </p>
+
+      <!-- CONTROLES -->
+      <div class="controls-list">
+
+        <b>Controles</b>
+
+        <p>
+          <kbd>W</kbd>
+          <kbd>A</kbd>
+          <kbd>S</kbd>
+          <kbd>D</kbd>
+          Caminar
+        </p>
+
+        <p><kbd>Shift</kbd> Correr</p>
+        <p><kbd>E</kbd> Interactuar</p>
+        <p><kbd>F</kbd> Usar computadora</p>
+        <p><kbd>Tab</kbd> Cambiar escenario</p>
+        <p><kbd>Esc</kbd> Liberar el ratón</p>
+
+        <p>
+          También puedes elegir una planta
+          desde el selector.
+        </p>
+
+      </div>
+
+      <p class="academic">
+        <a
+          href="referencias/ev52/plano_ev52_foto_1.jpg"
+          target="_blank"
+          rel="noopener">
+          Consultar fotografía del plano EV-52
+        </a>
+      </p>
+
+      <p class="academic">
+        Maqueta educativa aproximada basada
+        en fotografías.
+      </p>
+
+    </aside>
+
+    <!-- VISOR 3D -->
+    <main class="viewer">
+
+      <div
+        id="render-area"
+        aria-label="Vista tridimensional del escenario">
+
+        <div
+          class="crosshair"
+          id="crosshair">+</div>
+
+        <div
+          class="walk-tooltip"
+          id="walk-tooltip"></div>
+
+      </div>
+
+      <div class="viewer-top">
+        <strong id="scene-title">
+          Pirámide SENATI · 6 plantas
+        </strong>
+
+        <span id="floor-indicator">
+          Planta baja
+        </span>
+      </div>
+
+      <!-- COMPUTADORA VIRTUAL -->
+      <div
+        class="pc-panel"
+        id="pc-panel"
+        hidden
+        role="dialog"
+        aria-label="Computadora del salón">
+
+        <div class="pc-window">
+
+          <div class="pc-top">
+
+            <span id="pc-number">
+              PC-01
+            </span>
+
+            <button
+              id="pc-close"
+              type="button">
+              Cerrar ✕
+            </button>
+
+          </div>
+
+          <div class="pc-main">
+
+            <div class="pc-emblem">S</div>
+
+            <h2>Portal académico</h2>
+
+            <p>
+              Acceso a los servicios académicos
+              oficiales de SENATI.
+            </p>
+
+            <div class="pc-actions">
+
+              <a
+                href="https://go.senati.edu.pe/PROD/twbkwbis.P_ValLogin"
+                target="_blank"
+                rel="noopener noreferrer">
+                Abrir SINFO ↗
+              </a>
+
+              <a
+                href="https://campusonline.senati.edu.pe/"
+                target="_blank"
+                rel="noopener noreferrer">
+                Abrir Campus Online ↗
+              </a>
+
+            </div>
+
+            <small>
+              Los sitios oficiales se abren
+              en otra pestaña.
+            </small>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="viewer-bottom">
+
+        <span id="status">
+          Usa “Empezar recorrido” para activar el ratón.
+        </span>
+
+        <span id="fps">
+          Calidad optimizada
+        </span>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!--
+  MOTOR 3D Y MULTIJUGADOR FIREBASE
+
+  Este archivo carga:
+  public/assets/recorrer.js
+
+  El JavaScript del multijugador debe cargar
+  el motor original desde recorrer-base.js.
+-->
+
+<script
+  type="module"
+  src="./public/assets/recorrer.js">
+</script>
+
+</body>
+</html>
