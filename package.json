@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build",
     "watch": "vite build --watch",
-    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v12.mjs"
+    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v12.mjs && node scripts/verificar-unificado.mjs",
+    "check:unificado": "node scripts/verificar-unificado.mjs"
   },
   "dependencies": {
     "three": "0.180.0"
