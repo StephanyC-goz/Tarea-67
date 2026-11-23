@@ -36,7 +36,7 @@ for(const original of manifest.branches){
     const source=`archivo-original/${original.name}/${item.path}`;
     const data=bytes(source);
     assert.equal(data.length,item.size,`Archivo incompleto: ${source}`);
-    // Git SHA-1 para blobs: SHA1("blob <size>\\0" + bytes).
+    // Git SHA-1 para blobs: SHA1("blob <size>\0" + bytes).
     const sha=createHash('sha1').update(`blob ${data.length}\\0`).update(data).digest('hex');
     assert.equal(sha,item.sha,`Archivo original modificado: ${source}`);
     if(original.name==='main'&&item.path.startsWith('fachada-1/')){
