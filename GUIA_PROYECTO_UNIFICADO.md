@@ -2,7 +2,7 @@
 
 **Rama oficial de esta integración:** `proyecto-unificado`  
 **Carpeta única para Laragon:** `C:\laragon\www\piramide_senati_fusion`  
-**URL de entrada:** `http://localhost/piramide_senati_fusion/PANEL_UNIFICADO.html` (o puerto 8080 si Apache lo usa).
+**URL de entrada:** `http://localhost/piramide_senati_fusion/PANEL_UNIFICADO.html` (o puerto 8080 si Apache lo usa). Para diagnosticar la instalación antes de iniciar sesión, abre `COMPROBAR_INSTALACION.php` desde localhost.
 
 Este proyecto académico mantiene la aplicación PHP/MySQL/Three.js de `piramide-v11` como **motor principal**, con la distribución y funcionalidades que evolucionaron hasta V12. El módulo de fachada exterior de `main/fachada-1` se conserva íntegro y accesible desde el mismo portal. No se sustituyeron los modelos originales del exterior por los de V12: son dos representaciones históricas, con su identidad visual intacta. No es un plano arquitectónico oficial ni una simulación certificada.
 
