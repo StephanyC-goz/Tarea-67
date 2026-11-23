@@ -21,7 +21,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
                 session_regenerate_id(true);$_SESSION['user_id']=(int)$u['id'];$_SESSION['failed_logins']=0;db()->prepare('UPDATE users SET last_login_at=NOW() WHERE id=?')->execute([(int)$u['id']]);
                 auth_log((int)$u['id'],'login','Inicio de sesión');header('Location: recorrer.php');exit;
             }
-        }catch(Throwable $e){error_log('Login: '.$e->getMessage());$error='No se puede acceder a usuarios. Importa database/usuarios.sql y revisa MySQL.';}
+        }catch(Throwable $e){error_log('Login: '.$e->getMessage());$error='No se puede acceder a usuarios. Revisa MySQL o importa database/schema.sql si es una instalación nueva.';}
     }
 }
 ?><!doctype html>
@@ -32,5 +32,5 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
  <?php if(isset($_GET['pending'])):?><p class="success">Registro enviado. Tu cuenta requiere aprobación del administrador.</p><?php endif;?>
  <?php if($error):?><p class="error"><?=h($error)?></p><?php endif;?>
  <form method="post"><input type="hidden" name="csrf_token" value="<?=h(csrf_token())?>"><label>Correo electrónico<input name="email" type="email" required maxlength="190" autocomplete="username" placeholder="nombre@correo.com"></label><label>Contraseña<input name="password" type="password" required autocomplete="current-password" placeholder="Tu contraseña"></label><button class="primary" type="submit">Ingresar a los escenarios <span>→</span></button></form>
- <div class="guest-actions"><a class="ghost-link" href="recorrer.php?guest=1">Entrar como visitante</a></div><div class="auth-links">¿No tienes una cuenta? <a href="registro.php">Crear una cuenta</a></div><p class="privacy-note">Acceso protegido · Las contraseñas se verifican de forma segura y no se envían al portal oficial de SENATI.</p></div></section>
+ <div class="guest-actions"><a class="ghost-link" href="recorrer.php?guest=1">Entrar como visitante</a></div><div class="auth-links">¿No tienes una cuenta? <a href="registro.php">Crear una cuenta</a></div><div class="guest-actions"><a class="ghost-link" href="PANEL_UNIFICADO.html">Volver al portal unificado</a></div><p class="privacy-note">Acceso protegido · Las contraseñas se verifican de forma segura y no se envían al portal oficial de SENATI.</p></div></section>
 </main></body></html>
