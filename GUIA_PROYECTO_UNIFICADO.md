@@ -59,3 +59,28 @@ Los originales están bloqueados para acceso web en Apache mediante `.htaccess`;
 - Los gráficos 3D requieren navegador con WebGL, más Apache/PHP/MySQL y una compilación Vite vigente.
 - Los scripts de verificación detectan archivos faltantes y comprueban hashes, pero **no sustituyen las pruebas visuales reales de cámara, puertas y colisiones en la PC del usuario**.
 - La base `aula3d` guarda información local. No se transfiere automáticamente entre computadoras por GitHub.
+
+
+## Calidad gráfica 3D estilo videojuego
+
+La aplicación incluye un selector **Calidad gráfica 3D** en el editor, el recorrido y el simulador. La apariencia usa materiales PBR, baldosas con juntas suaves, pantallas con iluminación propia, niebla suave, sombras con encuadre del edificio y control de nitidez.
+
+- **Alto (recomendado en PC):** buena nitidez y sombras de 2048 píxeles.
+- **Ultra:** sombras de hasta 3072 píxeles y mayor resolución para GPU potente.
+- **Equilibrado:** sombras y resolución moderadas; útil en portátiles.
+- **Rendimiento:** sombras desactivadas y resolución reducida para recuperar FPS.
+
+Los ajustes se comparten entre pantallas usando las preferencias locales del navegador; no cambian los escenarios, usuarios ni MySQL. En el recorrido, el HUD muestra los FPS reales para elegir el nivel adecuado. El aspecto es una **interpretación estilizada de videojuego 3D**, no utiliza Roblox Studio ni reproduce recursos originales de Roblox.
+
+Para ver la actualización:
+
+```powershell
+cd "C:\laragon\www\piramide_senati_fusion"
+git switch proyecto-unificado
+git pull --ff-only origin proyecto-unificado
+npm ci
+npm run check
+npm run build
+```
+
+Abre `recorrer.php` y recarga con `Ctrl+F5`. Si la imagen va lenta, cambia a Equilibrado o Rendimiento. Las pruebas automatizadas verifican el código y las opciones gráficas, pero el aspecto final y los FPS dependen del navegador y la GPU y deben comprobarse visualmente.
