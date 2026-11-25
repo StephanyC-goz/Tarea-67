@@ -40,12 +40,36 @@ export const EV52_STAIRWELLS=modular.stairs;
 export const EV52_ELEVATORS=modular.elevators;
 export const EV52_ELEVATOR=EV52_ELEVATORS[0];
 
+function groundPlanV13(){
+ const rooms=[],bathrooms=[],doors=[],walls=[],seen=new Set();
+ const add=(list,id,label,x0,x1,z0,z1,pcs,side,kind)=>list.push({id,label,x0,x1,z0,z1,pcs,side,kind});
+ add(rooms,'AUD','Auditorio',-20.1,-13.2,-14.5,-6.8,0,'upper','auditorium');
+ const top=[-13.2,-5.85,1.5,8.85,16.2],bottom=[-12.7,-5.4,1.9,9.2];
+ for(let i=0;i<4;i++)add(rooms,'N'+(i+1),'Salón '+(i+1),top[i],top[i+1],-14.5,-7.8,4,'upper','classroom');
+ for(let i=0;i<3;i++)add(rooms,'S'+(i+1),'Salón '+(i+5),bottom[i],bottom[i+1],8.2,14.6,4,'lower','classroom');
+ add(rooms,'LAB','Laboratorios',9.2,22.4,8.2,15,4,'lower','lab');
+ add(bathrooms,'WC1','Baños 1',15.1,20.5,-4.6,-.65,0,'lower','bathroom');
+ add(bathrooms,'WC2','Baños 2',15.1,20.5,.8,4.9,0,'upper','bathroom');
+ const stairs=[{id:'escalera-1',name:'Escalera central A',x:-7.2,xMin:-9,xMax:-5.4,zTop:-4.9,zBottom:1.8},{id:'escalera-2',name:'Escalera central B',x:9.1,xMin:7.3,xMax:10.9,zTop:-4.9,zBottom:1.8}];
+ const elevators=[{id:'ascensor-A',x:-17.4,xMin:-18.6,xMax:-16.2,z:-2.7,zTop:-4.05,zBottom:-1.35,accessZ:-.15},{id:'ascensor-B',x:-14.5,xMin:-15.7,xMax:-13.3,z:-2.7,zTop:-4.05,zBottom:-1.35,accessZ:-.15}];
+ const skylight={x0:-4.9,x1:6.9,z0:-4.8,z1:5.9},patio={x0:21.1,x1:23.3,z0:-6.5,z1:6.9};
+ function wall(axis,x0,z0,x1,z1){const key=[axis,x0,z0,x1,z1].join(':');if(seen.has(key))return;seen.add(key);walls.push({axis,x0,z0,x1,z1})}
+ for(const r of [...rooms,...bathrooms]){
+  const {x0,x1,z0,z1,side}=r,cx=(x0+x1)/2,d=side==='upper'?z1:z0,back=side==='upper'?z0:z1;
+  wall('z',x0,back,x1,back);wall('x',x0,z0,x0,z1);wall('x',x1,z0,x1,z1);wall('z',x0,d,cx-.72,d);wall('z',cx+.72,d,x1,d);
+  doors.push({id:'p1-'+r.id,label:r.label,x:cx,z:d,side:'z',roomSide:side,kind:r.kind});
+ }
+ return {rooms,bathrooms,doors,walls,stairs,elevators,skylight,patio};
+}
+export const EV52_GROUND=groundPlanV13();
+export const roomsForFloor=(floor=1)=>floor===0?EV52_GROUND.rooms:EV52_ROOMS;
+
 /** Posiciones de muebles en unidades REALES del escenario ya escalado. */
-export function ev52DeskPositions(scaleX=1,scaleZ=1){
+export function ev52DeskPositions(scaleX=1,scaleZ=1,floor=1){
   const result=[];
-  for(const r of EV52_ROOMS.filter(r=>r.pcs)){
+  for(const r of roomsForFloor(floor).filter(r=>r.pcs)){
     const cx=(r.x0+r.x1)/2,cz=(r.z0+r.z1)/2;
-    for(const dz of [-1.35,1.05])for(const dx of [-1.25,1.25]){
+    for(const dz of [-1.35,1.05])for(const dx of (floor===0?[-1.6,1.6]:[-1.25,1.25])){
       result.push({x:(cx+dx)*scaleX,z:(cz+dz)*scaleZ,room:r.id});
     }
   }

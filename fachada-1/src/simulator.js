@@ -464,7 +464,7 @@ function loadDemoScenario(){
   roofVisible=true;gridVisible=false;
   savedObjects=[];
   const {x:sx,z:sz}=pyramidScale(roomWidth,roomDepth);
-  const deskPositions=ev52DeskPositions(sx,sz);
+  const deskPositions=ev52DeskPositions(sx,sz,0);
   deskPositions.forEach(p=>savedObjects.push({catalog_key:'desk',pos_x:p.x,pos_y:0,pos_z:p.z,scale_x:1,scale_y:1,scale_z:1,config_json:'{}'}));
   for(const [i,p] of deskPositions.filter((_,i)=>i%2===0).slice(0,8).entries())
     savedObjects.push({catalog_key:i%2?'woman-senati':'man-senati',pos_x:p.x,pos_y:0,pos_z:p.z+.90,scale_x:1,scale_y:1,scale_z:1,config_json:'{}'});
@@ -478,7 +478,7 @@ function loadDemoScenario(){
   $('show-grid').textContent=gridVisible?'Ocultar cuadrícula':'Mostrar cuadrícula';
   $('save-results').disabled=true;
   $('saved-runs').textContent='Para guardar resultados, abre un escenario almacenado por el administrador en MySQL.';
-  setStatus('Demostración EV-52 aproximada: 40 puestos distribuidos en aulas, 8 participantes. Las rutas son ilustrativas y NO equivalen al plano oficial.');
+  setStatus('Demostración EV-52 aproximada: 32 puestos distribuidos en aulas y laboratorios, 8 participantes. Las rutas son ilustrativas y NO equivalen al plano oficial.');
   fitRenderer();
 }
 

@@ -120,7 +120,10 @@ console.log('Exterior OK: puerta lateral operativa y recorrido 1–7 continuo en
 assert.equal(current.rooms.length,10);
 assert.equal(current.bathrooms.length,2);
 assert.equal(current.elevators.length,2);
-assert.equal(current.classroomDoors.length,72);
+assert.equal(current.classroomDoors.length,71);
+assert.equal(current.ground.rooms.filter(r=>r.kind==='classroom').length,7);
+assert.equal(current.ground.rooms.filter(r=>r.kind==='auditorium').length,1);
+assert.equal(current.ground.rooms.filter(r=>r.kind==='lab').length,1);
 assert.equal(current.floorWallBoxes.length,6);
-assert(current.floorWallBoxes.every(w=>w.length===current.floorWallBoxes[0].length));
+assert(current.floorWallBoxes.slice(2).every(w=>w.length===current.floorWallBoxes[2].length));
 console.log('Interior modular: seis plantas, 10 aulas, dos baños, dos ascensores y dos escaleras por planta.');

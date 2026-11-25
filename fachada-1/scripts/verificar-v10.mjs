@@ -5,7 +5,7 @@ import { dirname,resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   EV52_WALL_SEGMENTS, EV52_ROOMS, EV52_DOORS,
-  EV52_STAIRWELLS, EV52_ELEVATOR, EV52_ELEVATORS, EV52_BATHROOMS, ev52DeskPositions,
+  EV52_STAIRWELLS, EV52_ELEVATOR, EV52_ELEVATORS, EV52_BATHROOMS, EV52_GROUND, ev52DeskPositions,
   getPyramidDimensions, pyramidScale,
   DEFAULT_PYRAMID_WIDTH, DEFAULT_PYRAMID_DEPTH, DEFAULT_LEVEL_HEIGHT
 } from '../src/ev52-layout.js';
@@ -86,3 +86,9 @@ console.log(`Ejemplo aula N3: ${m.exampleClassroom.width.toFixed(2)}×${m.exampl
 assert(Math.abs((EV52_DOORS[0].x - EV52_ROOMS[0].x0) - (EV52_ROOMS[0].x1-EV52_ROOMS[0].x0)/2)<1e-8);
 assert(m.elevator.depth>2 && m.elevator.depth<3);
 assert(m.staircase.length>7 && m.staircase.length<8);
+
+assert.equal(EV52_GROUND.rooms.filter(r=>r.kind==='classroom').length,7);
+assert.equal(EV52_GROUND.rooms.filter(r=>r.kind==='auditorium').length,1);
+assert.equal(EV52_GROUND.rooms.filter(r=>r.kind==='lab').length,1);
+assert.equal(ev52DeskPositions(1,1,0).length,32);
+assert.equal(ev52DeskPositions(1,1,1).length,40);

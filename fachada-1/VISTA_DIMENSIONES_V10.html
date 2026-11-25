@@ -30,14 +30,14 @@ footer{color:var(--muted);font-size:13px;line-height:1.6;margin-top:18px}
     <label>Altura por planta <output id="outHeight">3,8 m</output><input id="height" type="range" min="3" max="5" step=".1" value="3.8"></label>
   </div>
   <p class="note">Estos controles muestran una vista previa: para aplicar dimensiones al edificio 3D, utiliza <b>Editor → Ancho / Largo / Altura → Aplicar dimensiones</b>. Ninguna cifra corresponde a mediciones certificadas de la sede real.</p>
-  <div class="diagram"><svg id="plant" viewBox="0 0 1200 680" role="img" aria-label="Esquema de distribución con 10 aulas, dos baños, vestíbulo, dos escaleras y dos ascensores"></svg></div>
-  <p class="note">Los accesos de cada sala están abiertos en el croquis virtual. Los seis pisos reutilizan una planta modular propuesta para el proyecto; no representa los planos reales de SENATI.</p>
+  <div class="diagram"><svg id="plant" viewBox="0 0 1200 680" role="img" aria-label="Esquema de distribución con 7 salones, auditorio, laboratorios, dos baños, dos escaleras y dos ascensores"></svg></div>
+  <p class="note">Los accesos de cada sala están abiertos en el croquis virtual. Solo el primer piso interpreta el plano etiquetado. Los demás niveles mantienen su distribución provisional.</p>
 </section>
 <section class="panel"><h2>Medidas orientativas calculadas</h2><div class="stats" id="stats"></div><div class="rooms" id="rooms"></div></section>
 <footer>Maqueta educativa: no usar para estimar aforo, verificar evacuación, accesibilidad, estructuras o medidas de construcción. El ascensor del recorrido cambia de planta de forma simulada.</footer>
 </main>
 <script type="module">
-import {EV52_ROOMS,EV52_WALL_SEGMENTS,EV52_DOORS,EV52_STAIRWELLS,EV52_ELEVATORS,EV52_BATHROOMS,getPyramidDimensions} from './assets/ev52-layout-public.js';
+import {EV52_GROUND,getPyramidDimensions} from './assets/ev52-layout-public.js';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const svg=$('plant');
 const svgNode=(tag,attrs={},text)=>{const el=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;return el;};
@@ -45,6 +45,7 @@ function draw(){
  const w=+$('width').value,d=+$('depth').value,h=+$('height').value;
  $('outWidth').textContent=`${w} m`;$('outDepth').textContent=`${d} m`;$('outHeight').textContent=`${h.toFixed(1).replace('.',',')} m`;
  const m=getPyramidDimensions(w,d),sx=m.scaleX,sz=m.scaleZ;
+ const {rooms:EV52_ROOMS,walls:EV52_WALL_SEGMENTS,doors:EV52_DOORS,stairs:EV52_STAIRWELLS,elevators:EV52_ELEVATORS,bathrooms:EV52_BATHROOMS,skylight,patio}=EV52_GROUND;
  const x0=-13.15*56/34,x1=14.55*56/34,z0=-8.80*38/20,z1=8.82*38/20;
  const scale=Math.min(1000/((x1-x0)*sx),555/((z1-z0)*sz));
  const X=x=>600+(x-(x0+x1)/2)*sx*scale,Z=z=>336+(z-(z0+z1)/2)*sz*scale;
@@ -52,16 +53,12 @@ function draw(){
  svg.append(svgNode('rect',{x:0,y:0,width:1200,height:680,fill:'#f9fbfc'}));
  const pt=(x0,z0,x1,z1,attrs)=>svgNode('rect',{x:X(x0),y:Z(z0),width:(x1-x0)*sx*scale,height:(z1-z0)*sz*scale,...attrs});
  svg.append(pt(x0,z0,x1,z1,{fill:'#eff4f7',stroke:'#1c3b53','stroke-width':2}));
- // Camino central y vestíbulo exterior, despejados visualmente.
- svg.append(pt(-8.65*56/34,-3.24*38/20,9.25*56/34,2.36*38/20,{fill:'#dfeeed',stroke:'none'}));
- svg.append(pt(-8.65*56/34,-3.24*38/20,9.25*56/34,-1.54*38/20,{fill:'#b4d7ce',stroke:'none'}));
- const hall=svgNode('text',{x:X(0),y:Z(-.3*38/20),fill:'#2c686b','font-size':16,'font-weight':700,'text-anchor':'middle'},'VESTÍBULO CENTRAL');svg.append(hall);
- svg.append(svgNode('text',{x:X(0),y:Z(-2.36*38/20),'font-size':11,'text-anchor':'middle',fill:'#22645e','font-weight':700},`PASADIZO ${m.corridorWidth.toFixed(1)} m`));
+ for(const [area,name] of [[skylight,'ZONA DEL TRAGALUZ'],[patio,'PATIO']]){svg.append(pt(area.x0,area.z0,area.x1,area.z1,{fill:'#dfeeed',stroke:'none'}));svg.append(svgNode('text',{x:X((area.x0+area.x1)/2),y:Z((area.z0+area.z1)/2),'font-size':12,'font-weight':700,'text-anchor':'middle',fill:'#22645e'},name));}
  for(const r of EV52_ROOMS){
    svg.append(pt(r.x0,r.z0,r.x1,r.z1,{fill:r.side==='upper'?'#d9e9f4':'#efead9',stroke:'none'}));
    const cx=(r.x0+r.x1)/2,cz=(r.z0+r.z1)/2;
-   svg.append(svgNode('text',{x:X(cx),y:Z(cz)-7,'font-size':14,'font-weight':800,'text-anchor':'middle',fill:'#21415c'},r.id));
-   const real=m.rooms.find(z=>z.id===r.id);
+   svg.append(svgNode('text',{x:X(cx),y:Z(cz)-7,'font-size':14,'font-weight':800,'text-anchor':'middle',fill:'#21415c'},r.label));
+   const real={width:(r.x1-r.x0)*sx,depth:(r.z1-r.z0)*sz};
    svg.append(svgNode('text',{x:X(cx),y:Z(cz)+12,'font-size':11,'text-anchor':'middle',fill:'#38556a'},`${real.width.toFixed(1)} × ${real.depth.toFixed(1)} m`));
  }
  for(const [i,st] of EV52_STAIRWELLS.entries()){
@@ -81,13 +78,13 @@ function draw(){
  for(const door of EV52_DOORS){svg.append(svgNode('line',{x1:X(door.x-.65),y1:Z(door.z),x2:X(door.x+.65),y2:Z(door.z),stroke:'#3ba77f','stroke-width':4}));}
  svg.append(svgNode('path',{d:`M ${X(-13.02*56/34)} ${Z(-2.07)} L ${X(-13.02*56/34)} ${Z(.57)}`,stroke:'#148c75','stroke-width':8}));
  svg.append(svgNode('text',{x:X(-13.02*56/34)+8,y:Z(.57)+15,'text-anchor':'start','font-size':11,'font-weight':700,fill:'#13695c'},'INGRESO PRINCIPAL'));
- svg.append(svgNode('text',{x:30,y:35,fill:'#354a5b','font-size':20,'font-weight':800},`PLANTAS 1–6 · MODELO ${w} × ${d} m`));
+ svg.append(svgNode('text',{x:30,y:35,fill:'#354a5b','font-size':20,'font-weight':800},`PRIMER PISO · MODELO ${w} × ${d} m`));
  svg.append(svgNode('text',{x:30,y:60,fill:'#66798b','font-size':12},'Dimensiones virtuales, no levantamiento arquitectónico'));
  $('stats').innerHTML='';
  for(const [value,label] of [[`${w} × ${d} m`,'Dimensiones generales'],[`${m.exampleClassroom.width.toFixed(1)} × ${m.exampleClassroom.depth.toFixed(1)} m`,'Aula superior N3'],[`${m.staircase.width.toFixed(1)} × ${m.staircase.length.toFixed(1)} m`,'Cada tramo de escalera'],[`${m.elevator.width.toFixed(1)} × ${m.elevator.depth.toFixed(1)} m`,'Hueco del ascensor'],[`${m.corridorWidth.toFixed(1)} m`,'Ancho del pasadizo'],[`${m.centralHallWidth.toFixed(1)} m`,'Vestíbulo + pasadizo'],[`${(6*h).toFixed(1)} m`,'Seis alturas de planta']]){
   const el=document.createElement('div');el.className='stat';el.innerHTML=`<strong>${value}</strong><span>${label}</span>`;$('stats').append(el);
  }
- $('rooms').replaceChildren(...m.rooms.map(r=>{const el=document.createElement('div');el.className='room';const n=document.createElement('b');n.textContent=`${r.id} · ${r.label}`;const t=document.createElement('span');t.textContent=`${r.width.toFixed(1)} m de ancho × ${r.depth.toFixed(1)} m de fondo`;el.append(n,t);return el;}));
+ $('rooms').replaceChildren(...EV52_ROOMS.map(raw=>({...raw,width:(raw.x1-raw.x0)*sx,depth:(raw.z1-raw.z0)*sz})).map(r=>{const el=document.createElement('div');el.className='room';const n=document.createElement('b');n.textContent=`${r.id} · ${r.label}`;const t=document.createElement('span');t.textContent=`${r.width.toFixed(1)} m de ancho × ${r.depth.toFixed(1)} m de fondo`;el.append(n,t);return el;}));
 }
 for(const id of ['width','depth','height'])$(id).addEventListener('input',draw);
 draw();

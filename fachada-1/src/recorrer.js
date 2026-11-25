@@ -5,7 +5,7 @@ import { buildPiramideSENATI } from './piramide-senati.js';
 import {mountGraphicsQuality} from './calidad-grafica.js';
 import { isDefaultEntrancePerson, isOldFrontExitSign } from './exterior-campus.js';
 import { insideFootprint, canCrossBuilding, canOccupyPyramidInterior } from './exterior-navigation.js';
-import {EV52_ROOMS,ev52DeskPositions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
+import {roomsForFloor,ev52DeskPositions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
 
 const $=id=>document.getElementById(id);
 const host=$('render-area');
@@ -71,17 +71,17 @@ function renderDemoFurniture(){
     const floorY=currentFloor*H;
     // Puestos colocados dentro de aulas separadas. No se apilan sobre el pasadizo.
     const sx=building?.scaleX||1,sz=building?.scaleZ||1;
-    const stations=ev52DeskPositions(sx,sz);
+    const stations=ev52DeskPositions(sx,sz,currentFloor);
     stations.forEach((desk,idx)=>{
       station(furniture,desk.x,floorY,desk.z,idx,currentFloor);
       placeDecorModel(idx%2===0?'man-senati':'woman-senati',desk.x,floorY,desk.z+.90,Math.PI,{seated:true});
     });
-    for(const room of EV52_ROOMS.filter(r=>r.pcs)){
+    for(const room of roomsForFloor(currentFloor).filter(r=>r.pcs)){
       const x=((room.x0+room.x1)/2+(room.side==='lower'?-1.7:0))*sx,z=room.z0*sz+1.4;
       placeDecorModel('teacher',x+.15,floorY,z,0,{seated:false});
       placeDecorModel('fan',x,floorY,(room.z0+room.z1)/2*sz,0,{});
     }
-    for(const st of building.staircases)placeDecorModel('safety-exit',st.x,floorY,st.zBottom+1.1,Math.PI,{});
+    for(const st of building.stairsByFloor(currentFloor))placeDecorModel('safety-exit',st.x,floorY,st.zBottom+1.1,Math.PI,{});
     placeDecorModel('fire-extinguisher',7.9*sx,floorY,1.50*sz,-Math.PI/2,{});
     placeDecorModel('safety-rules',-8.0*sx,floorY,1.5*sz,Math.PI/2,{});
   }else{
@@ -149,7 +149,7 @@ function setVisibility(){
 }
 function makeFloorOptions(){
   $('floor-select').innerHTML='';
-  for(let i=0;i<totalFloors;i++){let o=document.createElement('option');o.value=String(i);o.textContent=i===0&&kind==='piramide'?'Piso 1 · planta V10 proporcionada':`Piso ${i+1}`;$('floor-select').append(o);}
+  for(let i=0;i<totalFloors;i++){let o=document.createElement('option');o.value=String(i);o.textContent=i===0&&kind==='piramide'?'Piso 1 · plano de referencia':`Piso ${i+1}`;$('floor-select').append(o);}
   $('floor-select').value=String(currentFloor);
 }
 function resetCamera(){
@@ -167,7 +167,7 @@ function resetCamera(){
 function setFloor(index){
   seatedAt=null;closePC();
   currentFloor=THREE.MathUtils.clamp(index,0,totalFloors-1);
-  if(items.length) renderSavedFurniture(); else renderDemoFurniture();
+  if(items.length && !(kind==='piramide'&&currentFloor===0)) renderSavedFurniture(); else renderDemoFurniture();
   $('floor-select').value=String(currentFloor);
   $('floor-indicator').textContent=`Piso ${currentFloor+1} / ${totalFloors}`;
 }
@@ -270,13 +270,14 @@ function openPC(){
 function closePC(){pcOpen=false;const panel=$('pc-panel');if(panel)panel.hidden=true;}
 function nearElevator(maxDistance=2.50){
   if(kind!=='piramide'||!building?.elevator)return false;
-  return (building.elevators||[building.elevator]).map(el=>({el,d:Math.hypot(camera.position.x-el.x,camera.position.z-el.accessZ)})).filter(o=>o.d<maxDistance).sort((a,b)=>a.d-b.d)[0]?.el||false;
+  return building.elevatorsByFloor(currentFloor).map(el=>({el,d:Math.hypot(camera.position.x-el.x,camera.position.z-el.accessZ)})).filter(o=>o.d<maxDistance).sort((a,b)=>a.d-b.d)[0]?.el||false;
 }
 function takeElevator(){
   const lift=nearElevator();if(!lift)return false;
   const next=(currentFloor+1)%totalFloors;
+  const arrival=building.elevatorsByFloor(next).find(el=>el.id===lift.id)||building.elevatorsByFloor(next)[0];
   setFloor(next);
-  camera.position.set(lift.x,next*H+1.68,lift.accessZ);
+  camera.position.set(arrival.x,next*H+1.68,arrival.accessZ);
   velocity.set(0,0,0);stairRoute=null;
   $('status').textContent=`Ascensor didáctico: planta ${next+1}. Presiona E para ir a la siguiente planta.`;
   return true;
@@ -312,7 +313,7 @@ function canMove(x,z){
   if(kind==='piramide'&&building?.stairs){
     // El tramo puede abordarse por los extremos. No se puede atravesar por
     // un lateral el hueco que comunica pisos diferentes.
-    for(const st of building.staircases){
+    for(const st of building.stairsByFloor(currentFloor)){
       const wasIn=camera.position.x>st.xMin+.16&&camera.position.x<st.xMax-.16&&camera.position.z<st.zBottom&&camera.position.z>st.zTop;
       const nowIn=x>st.xMin+.16&&x<st.xMax-.16&&z<st.zBottom&&z>st.zTop;
       if(nowIn&&!wasIn&&z<st.zBottom-.30&&z>st.zTop+.30)return false;
@@ -349,13 +350,14 @@ function updateStairs(prevZ){
   if(currentFloor===0&&building.campus&&!insideFootprint(x,z,building.footprint)){
     stairRoute=null;camera.position.y=building.campus.heightAt(x,z)+1.68;return;
   }
-  const all=building.staircases||[building.stairs];
+  const all=building.stairsByFloor(currentFloor);
   const inside=st=>x>st.xMin+.20&&x<st.xMax-.20&&z<st.zBottom&&z>st.zTop;
   const candidate=all.find(inside);
   if(candidate&&!stairRoute){
     const fromTop=prevZ<=candidate.zTop+.25;
     const base=fromTop?currentFloor-1:currentFloor;
-    if(base<0||base>=totalFloors-1){camera.position.z=prevZ;camera.position.y=currentFloor*H+1.68;return;}
+    const groundFlight=building.ground.stairs.includes(candidate);
+    if(base<0||base>=totalFloors-1||groundFlight!== (base===0)){camera.position.z=prevZ;camera.position.y=currentFloor*H+1.68;return;}
     stairRoute={base,st: candidate};
   }
   if(stairRoute){

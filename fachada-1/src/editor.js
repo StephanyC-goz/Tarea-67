@@ -6,7 +6,7 @@ import { buildPiramideSENATI } from './piramide-senati.js';
 import {mountGraphicsQuality} from './calidad-grafica.js';
 import { isDefaultEntrancePerson, isOldFrontExitSign } from './exterior-campus.js';
 import { insideFootprint, canCrossBuilding, canOccupyPyramidInterior } from './exterior-navigation.js';
-import {EV52_ROOMS,ev52DeskPositions,pyramidScale,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
+import {roomsForFloor,ev52DeskPositions,pyramidScale,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
 import thumbManSenati from './assets/library/student-senati-m.webp';
 import thumbWomanSenati from './assets/library/student-senati-f.webp';
 import thumbManCasual from './assets/library/student-casual-m.webp';
@@ -1312,7 +1312,7 @@ $('new-scene').addEventListener('click',()=>{
 function populatePyramidClassroomFloor(floorIndex,{silent=true}={}){
   const y=floorElevation(floorIndex);
   const {x:sx,z:sz}=pyramidScale(room.width,room.depth);
-  ev52DeskPositions(sx,sz).forEach((desk,idx)=>{
+  ev52DeskPositions(sx,sz,floorIndex).forEach((desk,idx)=>{
     const obj=addObject('desk',new THREE.Vector3(desk.x,y,desk.z),{rotationY:0,silent:true});
     equipDesk(obj,{silent:true});
     const chair=addObject('chair',new THREE.Vector3(desk.x,y,desk.z+.91),{rotationY:Math.PI/2,silent:true,skipSeat:true});
@@ -1320,7 +1320,7 @@ function populatePyramidClassroomFloor(floorIndex,{silent=true}={}){
     if(idx%2===0)addObject('man-senati',new THREE.Vector3(desk.x,y,desk.z+.92),
       {rotationY:Math.PI,silent:true,seated:true,accessoryOf:chair.userData.objectId});
   });
-  for(const r of EV52_ROOMS.filter(r=>r.pcs)){
+  for(const r of roomsForFloor(floorIndex).filter(r=>r.pcs)){
     const x=((r.x0+r.x1)/2+(r.side==='lower'?-1.7:0))*sx,z=r.z0*sz+1.4;
     addObject('teacher',new THREE.Vector3(x,y,z),{rotationY:0,silent:true});
     addObject('fan',new THREE.Vector3(x,y,(r.z0+r.z1)/2*sz),{silent:true});

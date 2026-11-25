@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { buildCampusExterior } from './exterior-campus.js';
 import {createPolishedFloorTexture} from './calidad-grafica.js';
-import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_BATHROOMS, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, pyramidScale} from './ev52-layout.js';
+import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_BATHROOMS, EV52_GROUND, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, pyramidScale} from './ev52-layout.js';
 
 const standard = (c,r=.77,met=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:met});
 function box(parent,w,h,d,x,y,z,material,casts=true){
@@ -415,6 +415,11 @@ function useMode({shell,envelope,roof,interior,mode='exterior',roofVisible=false
   roof.visible=Boolean(roofVisible)&&mode!=='estructura';
 }
 
+function scaleGroundV13(plan,X,Z){
+ const room=r=>({...r,x0:X(r.x0),x1:X(r.x1),z0:Z(r.z0),z1:Z(r.z1)});
+ const core=r=>({...r,x:X(r.x),xMin:X(r.xMin),xMax:X(r.xMax),zTop:Z(r.zTop),zBottom:Z(r.zBottom),...(r.accessZ===undefined?{}:{z:Z(r.z),accessZ:Z(r.accessZ)})});
+ return {rooms:plan.rooms.map(room),bathrooms:plan.bathrooms.map(room),walls:plan.walls.map(room),doors:plan.doors.map(d=>({...d,x:X(d.x),z:Z(d.z)})),stairs:plan.stairs.map(core),elevators:plan.elevators.map(core),skylight:room(plan.skylight),patio:room(plan.patio)};
+}
 export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,levels=6,mode='exterior',roofVisible=false,facadeColor='#afa59b',signColor='#1251cb'}={}){
   const root=new THREE.Group();root.name='Dirección Nacional SENATI · V10: geometría a escala humana';parent.add(root);
   // V10: no estirar la escena, ya que Three.js también estira puertas, escaleras,
@@ -422,6 +427,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const {x:scaleX,z:scaleZ}=pyramidScale(width,depth);
   root.scale.set(1,1,1);
   const X=v=>v*scaleX, Z=v=>v*scaleZ;
+  const ground=scaleGroundV13(EV52_GROUND,X,Z);
   const rooms=EV52_ROOMS.map(r=>({...r,x0:X(r.x0),x1:X(r.x1),z0:Z(r.z0),z1:Z(r.z1)}));
   const doors=EV52_DOORS.map(d=>({...d,x:X(d.x),z:Z(d.z)}));
   const wallSegments=EV52_WALL_SEGMENTS.map(s=>({axis:s.axis,x0:X(s.x0),x1:X(s.x1),z0:Z(s.z0),z1:Z(s.z1)}));
@@ -459,11 +465,12 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     ...liftLayouts.map(l=>({x0:l.xMin,x1:l.xMax,z0:l.zTop,z1:l.zBottom}))];
   // Cortar las losas, sin cubrir accidentalmente los huecos del elevador y escaleras.
   function makeSlab(y,withHoles){
-    const xs=[floorBounds.left,floorBounds.right,...(withHoles?holes.flatMap(h=>[h.x0,h.x1]):[])].sort((a,b)=>a-b);
-    const zs=[floorBounds.back,floorBounds.front,...(withHoles?holes.flatMap(h=>[h.z0,h.z1]):[])].sort((a,b)=>a-b);
+    const slabHoles=withHoles?(Math.abs(y-levelHeight)<.001?[...holes,...ground.stairs.map(st=>({x0:st.xMin,x1:st.xMax,z0:st.zTop,z1:st.zBottom}))]:holes):[];
+    const xs=[floorBounds.left,floorBounds.right,...(withHoles?slabHoles.flatMap(h=>[h.x0,h.x1]):[])].sort((a,b)=>a-b);
+    const zs=[floorBounds.back,floorBounds.front,...(withHoles?slabHoles.flatMap(h=>[h.z0,h.z1]):[])].sort((a,b)=>a-b);
     for(let i=0;i<xs.length-1;i++)for(let j=0;j<zs.length-1;j++){
       const x0=xs[i],x1=xs[i+1],z0=zs[j],z1=zs[j+1],cx=(x0+x1)/2,cz=(z0+z1)/2;
-      if(withHoles&&holes.some(h=>cx>h.x0&&cx<h.x1&&cz>h.z0&&cz<h.z1))continue;
+      if(withHoles&&slabHoles.some(h=>cx>h.x0&&cx<h.x1&&cz>h.z0&&cz<h.z1))continue;
       if(x1-x0<.01||z1-z0<.01)continue;
       box(interior,x1-x0,.15,z1-z0,cx,y,(z0+z1)/2,slab,false);
     }
@@ -496,6 +503,17 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       halfWidth:half});
     wallZ(g,door.z,door.x-half,door.x+half,base+2.44,Math.max(.05,wallHeight-2.44));
   }
+function groundDetailsV13(g,plan,boxes,put,mat,label){
+ const auditorium=plan.rooms.find(r=>r.kind==='auditorium'),seat=mat('#244f88',.75),stage=mat('#a58b6d',.8),dark=mat('#39434a',.7),floor=mat('#d6e4e0',.85);
+ if(auditorium){const r=auditorium,cx=(r.x0+r.x1)/2;for(const frac of [.24,.46,.68])for(const pos of [-.28,-.11,.11,.28]){const x=cx+pos*(r.x1-r.x0),z=r.z0+frac*(r.z1-r.z0);put(g,.45,.10,.43,x,.48,z,seat,false);put(g,.45,.45,.08,x,.75,z+.19,seat,false);put(g,.08,.44,.08,x,.24,z,dark,false);boxes.push({x0:x-.225,x1:x+.225,z0:z-.215,z1:z+.23})}put(g,(r.x1-r.x0)*.70,.18,.65,cx,.165,r.z0+.45,stage,false);boxes.push({x0:cx-(r.x1-r.x0)*.35,x1:cx+(r.x1-r.x0)*.35,z0:r.z0+.125,z1:r.z0+.775})}
+ const p=plan.patio;put(g,p.x1-p.x0,.014,p.z1-p.z0,(p.x0+p.x1)/2,.083,(p.z0+p.z1)/2,floor,false);label(g,'PATIO',(p.x0+p.x1)/2,(p.z0+p.z1)/2,1.8,'#427366',.102);
+ const a=plan.skylight;label(g,'ZONA DEL TRAGALUZ',(a.x0+a.x1)/2,(a.z0+a.z1)/2,4.8,'#246a61',.102);
+}
+function protectGroundOpeningV13(g,stairs,boxes,base,put,mat){
+ const rail=mat('#506573',.58,.26);
+ function barrier(w,d,x,z){put(g,w,1.05,d,x,base+.6,z,rail,false);boxes.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2})}
+ for(const st of stairs){for(const x of [st.xMin-.07,st.xMax+.07])barrier(.10,st.zBottom-st.zTop,x,(st.zTop+st.zBottom)/2);barrier(st.xMax-st.xMin+.2,.10,st.x,st.zBottom+.07);}
+}
   function furnishServices(g,rooms,stairs,floorBoxes,base,levelH,put,mat,label){
  const ceramic=mat('#f7f8f4',.34),tile=mat('#b8d7db',.67),partition=mat('#e0e7e8',.81),steel=mat('#7a8994',.45,.35);
  function solid(w,h,d,x,y,z,material){put(g,w,h,d,x,base+y,z,material,false);floorBoxes.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2})}
@@ -506,7 +524,8 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     const base=f*levelHeight;
     makeSlab(base,f!==0);
     const floor=new THREE.Group();floor.name=`Planta ${f+1} · salas, pasillos, dos escaleras y ascensor`;interior.add(floor);
-    for(const s of wallSegments){
+    const floorRooms=f===0?ground.rooms:rooms, floorBaths=f===0?ground.bathrooms:bathrooms, floorStairs=f===0?ground.stairs:stairsLayout, floorLifts=f===0?ground.elevators:liftLayouts;
+    for(const s of (f===0?ground.walls:wallSegments)){
       if(s.axis==='z')wallZ(floor,s.z0,s.x0,s.x1,base);
       else wallX(floor,s.x0,s.z0,s.z1,base);
       floorWallBoxes[f].push({
@@ -515,15 +534,15 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       });
     }
     // El ascensor conserva su caja cerrada: no es atravesable caminando.
-    for(const lf of liftLayouts)floorWallBoxes[f].push(
+    for(const lf of floorLifts)floorWallBoxes[f].push(
       {x0:lf.xMin-.12,x1:lf.xMin+.12,z0:lf.zTop-.12,z1:lf.zBottom+.12},
       {x0:lf.xMax-.12,x1:lf.xMax+.12,z0:lf.zTop-.12,z1:lf.zBottom+.12},
       {x0:lf.xMin-.12,x1:lf.xMax+.12,z0:lf.zTop-.12,z1:lf.zTop+.12},
       {x0:lf.xMin-.12,x1:lf.xMax+.12,z0:lf.zBottom-.12,z1:lf.zBottom+.12}
     );
-    for(const door of doors)addDoor(floor,door,f,base);
-    furnishServices(floor,bathrooms,stairsLayout,floorWallBoxes[f],base,levelHeight,box,standard,placeFloorLabel);
-    for(const r of rooms){
+    for(const door of (f===0?ground.doors:doors))addDoor(floor,door,f,base);
+    furnishServices(floor,floorBaths,floorStairs,floorWallBoxes[f],base,levelHeight,box,standard,placeFloorLabel);
+    for(const r of floorRooms){
       const cx=(r.x0+r.x1)/2,cz=(r.z0+r.z1)/2;
       placeFloorLabel(floor,`${f+1} · ${r.label}`,cx,cz,Math.min(2.8,r.x1-r.x0-.20),'#2e5680',base+.09);
       if(r.pcs){
@@ -535,34 +554,40 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       }
     }
     // Franja continua de circulación: ~3,23 m en la escala 56 × 38.
-    box(floor,X(17.9*56/34),.018,Z(1.70*38/20),X(.40*56/34),base+.088,Z(-2.36*38/20),standard(0xb4d7ce,.95),false);
+    if(f===0)groundDetailsV13(floor,ground,floorWallBoxes[f],box,standard,placeFloorLabel);
+    else {
+    if(f!==1)box(floor,X(17.9*56/34),.018,Z(1.70*38/20),X(.40*56/34),base+.088,Z(-2.36*38/20),standard(0xb4d7ce,.95),false);
     placeFloorLabel(floor,'PASADIZO · 3,2 m APROX.',0,Z(-2.36*38/20),4.60,'#246a61',base+.108);
     placeFloorLabel(floor,f===0?'VESTÍBULO CENTRAL':'VESTÍBULO · PISO '+(f+1),0,.15,4.10,'#246a61',base+.055);
-    for(const lift of liftLayouts){
+    }
+    if(f===1)protectGroundOpeningV13(floor,ground.stairs,floorWallBoxes[f],base,box,standard);
+    for(const lift of floorLifts){
       placeFloorLabel(floor,lift.id.toUpperCase(),lift.x,lift.accessZ+.20,1.85,'#126f7a',base+.075);
       const label=new THREE.Mesh(new THREE.PlaneGeometry(1.65,.40),signCanvas(lift.id.toUpperCase()+' · '+(f+1),'#125b71'));
       label.position.set(lift.x,base+2.90,lift.zBottom+.08);floor.add(label);
     }
   }
   // Las dos escaleras tienen peldaños con alturas coherentes con cada nivel.
-  for(const st of stairsLayout){
+  for(const [st,start,end] of [...ground.stairs.map(st=>[st,0,Math.min(1,levels-1)]),...stairsLayout.map(st=>[st,1,levels-1])]){
     const steps=21,stepZ=(st.zBottom-st.zTop)/steps;
-    for(let f=0;f<levels-1;f++)for(let i=0;i<steps;i++){
+    for(let f=start;f<end;f++)for(let i=0;i<steps;i++){
       const rise=(i+1)*levelHeight/steps,z=st.zBottom-(i+.5)*stepZ;
       box(stairGroup,st.xMax-st.xMin-.16,.13,stepZ+.02,st.x,f*levelHeight+rise-.06,z,stairMat,false);
       if(i%4===0)for(const xx of [st.xMin+.10,st.xMax-.10])
         beam(stairGroup,[xx,f*levelHeight+rise+.06,z],[xx,f*levelHeight+rise+1.03,z],.019,railing);
     }
-    for(let f=0;f<levels-1;f++)for(const xx of [st.xMin+.10,st.xMax-.10])
+    for(let f=start;f<end;f++)for(const xx of [st.xMin+.10,st.xMax-.10])
       beam(stairGroup,[xx,f*levelHeight+1.11,st.zBottom],[xx,(f+1)*levelHeight+1.11,st.zTop],.030,railing);
   }
   // Ascensor visible en las seis plantas; el recorrido permite escoger el piso
   // desde el área de acceso mediante la tecla E. No se simula una cabina real en movimiento.
-  for(const lift of liftLayouts){
+  for(const [lift,start,end] of [...ground.elevators.map(l=>[l,0,1]),...liftLayouts.map(l=>[l,1,levels])]){
+  if(end<=start)continue;
+  const shaftHeight=(end-start)*levelHeight,shaftY=(start+end)*levelHeight/2;
   for(const x of [lift.xMin,lift.xMax])
-    box(elevatorGroup,.11,H,lift.zBottom-lift.zTop,x,H/2,(lift.zBottom+lift.zTop)/2,elevatorMetal,false);
-  box(elevatorGroup,lift.xMax-lift.xMin,H,.11,lift.x,H/2,lift.zTop,elevatorMetal,false);
-  for(let f=0;f<levels;f++){
+    box(elevatorGroup,.11,shaftHeight,lift.zBottom-lift.zTop,x,shaftY,(lift.zBottom+lift.zTop)/2,elevatorMetal,false);
+  box(elevatorGroup,lift.xMax-lift.xMin,shaftHeight,.11,lift.x,shaftY,lift.zTop,elevatorMetal,false);
+  for(let f=start;f<end;f++){
     const base=f*levelHeight;
     for(const x of [lift.x-.5,lift.x+.5])
       box(elevatorGroup,.96,2.48,.07,x,base+1.28,lift.zBottom,glass,false);
@@ -595,7 +620,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   return {root,roof,shell,envelope,interior,structure,environment,campus,
     footprint:{left:floorBounds.left,right:exterior.rightBoundary,back,front},classroomDoors,setClassroomDoorOpen,
     classroomBounds:corridorBounds,scaleX,scaleZ,width,depth,
-    setDoorOpen:exterior.setDoorOpen,entry:exterior.entry,stairs:staircases[1],staircases,elevator,elevators:liftLayouts,rooms,bathrooms,
+    setDoorOpen:exterior.setDoorOpen,entry:exterior.entry,stairs:staircases[1],staircases,elevator,elevators:liftLayouts,rooms,bathrooms,ground,roomsByFloor:f=>f===0?ground.rooms:rooms,stairsByFloor:f=>f===0?ground.stairs:f===1?[...ground.stairs,...stairsLayout]:stairsLayout,elevatorsByFloor:f=>f===0?ground.elevators:liftLayouts,
     firstFloorWalls:floorWallBoxes[0],floorWallBoxes,firstFloorIsEV52:true,
     walkBounds:{left:floorBounds.left,right:floorBounds.right,back:floorBounds.back,front:floorBounds.front},
     setMode(nextMode,nextRoof){useMode({shell,envelope,roof,interior,mode:nextMode,roofVisible:nextRoof});}};
