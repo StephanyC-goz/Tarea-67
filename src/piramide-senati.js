@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import {carveSlab} from './atrium-geometry.js';
 import {coreRects,clipWallsAgainstCores,doorsOutsideCores} from './nucleos-geometria.js';
 import {getFirstFloorFrontPlan} from './primer-piso-frente.js';
+import {createPolishedFloorTexture} from './calidad-grafica.js';
 import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, EV52_ATRIUM, pyramidScale} from './ev52-layout.js';
 
 const standard = (c,r=.77,met=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:met});
@@ -125,8 +126,11 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
 
   // V12: un mismo replanteo para ocho pisos; el atrio central queda libre.
   // tabiques que los crucen, y superficies de paso en dimensiones proporcionales.
-  const slab=standard(0xb3bac0,.85),railing=standard(0x506573,.58,.26);
-  const stairMat=standard(0xe4e8eb,.63),roomWall=standard(0xf2f0ea,.88);
+  // Baldosas procedurales claras: juntas discretas y acabado limpio de juego 3D.
+  // No se modifican las losas, sus huecos ni las colisiones del edificio.
+  const slab=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.82,
+    map:createPolishedFloorTexture()}),railing=standard(0x506573,.58,.26);
+  const stairMat=standard(0xe4e8eb,.63),roomWall=standard(0xf3f4f6,.84);
   const boardSurface=standard(0xf8fafb,.43),deskWood=standard(0x946c4a,.77);
   const mark=standard(0x477da7,.73),elevatorMetal=standard(0x53677b,.34,.62);
   const atriumGroup=new THREE.Group();atriumGroup.name='ATRIO CENTRAL · vacío libre para tragaluz';interior.add(atriumGroup);
