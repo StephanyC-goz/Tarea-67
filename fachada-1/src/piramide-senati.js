@@ -205,7 +205,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
 
   // El extremo de la plaza tiene dos masas de concreto y un cuerpo central retirado.
   const entryX = walkBounds.left;
-  const westX = entryX-X(4.6);
+  const westX = entryX-X(3.2); // Reduce el saliente del volumen frontal sin mover la puerta.
   const recessStart = Z(-3.25);
   const recessEnd = Z(10.6);
   const westSpan = recessEnd-recessStart;
@@ -222,8 +222,8 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const frontConcrete = standard(new THREE.Color(facadeColor).multiplyScalar(.79),.94);
   frontConcrete.map = concrete.map;
   const frontBlue = standard(new THREE.Color(signColor).multiplyScalar(.58),.72);
-  const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[Math.min(recessStart-Z(2),outerFace(-1,height)+Z(3.4)),height+.21]];
-  const frontWing = [[recessEnd,0],[wallFront,0],[Math.max(recessEnd+Z(1.8),outerFace(1,height)-Z(2.7)),height-levelHeight*.82],[recessEnd,height-levelHeight*.82]];
+  const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[Math.min(recessStart-Z(2),outerFace(-1,height)+Z(2.1)),height+.21]];
+  const frontWing = [[recessEnd,0],[wallFront,0],[Math.max(recessEnd+Z(1.8),outerFace(1,height)-Z(1.7)),height-levelHeight*.82],[recessEnd,height-levelHeight*.82]];
   sideVolume(envelope,'Muro lateral de concreto junto a la entrada',westX,entryX+.10,rearWing,frontConcrete);
   sideVolume(envelope,'Volumen inclinado a la derecha de la entrada',westX,entryX+.10,frontWing,frontConcrete);
   obstacles.push({x0:westX,x1:entryX,z0:wallBack,z1:recessStart},{x0:westX,x1:entryX,z0:recessEnd,z1:wallFront});
@@ -394,7 +394,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     box(shell,.096,.83,2.2,mainRight+1.3,y,front-1.20,windowTones[floor%4],false);
     box(shell,.28,.23,2.64,mainRight+1.26,y+.59,front-1.20,white);
   }
-  const roofLeft=westX-.13, roofRight=mainRight+1.35;
+  const roofLeft=westX+.02, roofRight=mainRight+1.35;
   box(roof,roofRight-roofLeft,.45,front-back+.35,(roofLeft+roofRight)/2,height+.15,(front+back)/2,spandrel);
 
   return {
