@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { createSceneModel } from './scene-models.js';
 import { buildPiramideSENATI } from './piramide-senati.js';
+import {mountGraphicsQuality} from './calidad-grafica.js';
 import { isDefaultEntrancePerson, isOldFrontExitSign } from './exterior-campus.js';
 import { insideFootprint, canCrossBuilding, canOccupyPyramidInterior } from './exterior-navigation.js';
 import {EV52_ROOMS,ev52DeskPositions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
@@ -21,8 +22,12 @@ camera.rotation.order='YXZ';
 const walk=new PointerLockControls(camera,renderer.domElement);
 walk.pointerSpeed=.85;
 const world=new THREE.Scene();world.background=new THREE.Color(0xbadbf2);
+world.fog=new THREE.Fog(0xbadbf2,175,325);
 const hemi=new THREE.HemisphereLight(0xf6faff,0xbabcb2,2.0);world.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff9e8,1.45);sun.position.set(15,28,20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-50;sun.shadow.camera.right=50;sun.shadow.camera.top=50;sun.shadow.camera.bottom=-50;world.add(sun);
+const skyFill=new THREE.DirectionalLight(0xb3d9ff,.55);skyFill.position.set(-24,18,-18);world.add(skyFill);
+const graphicsQuality=mountGraphicsQuality({container:document.querySelector('.walk-sidebar .settings'),renderer,sun,scene:world,shadowRadius:55});
+let frameSamples=0,lastFpsSample=0;
 let sceneRoot=new THREE.Group();world.add(sceneRoot);
 let furniture=new THREE.Group();sceneRoot.add(furniture);
 let building=null,doorOpen=false,kind='piramide',currentFloor=0,totalFloors=6;
@@ -31,7 +36,7 @@ let items=[],collisionBoxes=[],stairRoute=null,stationPositions=[],seatedAt=null
 const keys=new Set();const velocity=new THREE.Vector3();let started=false;
 let sceneEntries=[{id:'piramide',name:'Pirámide SENATI · 6 pisos'},{id:'aula',name:'Aula de cómputo · 20 estaciones'}];
 const material=(color,roughness=.76,metalness=.0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
-const M={floor:material(0xdccfba),wall:material(0xe3e9ef),blue:material(0x1554a1,.55),blueEdge:material(0x10386d),metal:material(0x687b90,.48,.4),black:material(0x1e2b37),screen:material(0x0d364f,.29),keys:material(0xd1dbe4),glass:new THREE.MeshPhysicalMaterial({color:0x8dc8e5,transparent:true,opacity:.38,depthWrite:false,roughness:.2,side:THREE.DoubleSide})};
+const M={floor:material(0xdccfba),wall:material(0xe3e9ef),blue:material(0x1554a1,.55),blueEdge:material(0x10386d),metal:material(0x687b90,.48,.4),black:material(0x1e2b37),screen:new THREE.MeshStandardMaterial({color:0x114a66,emissive:0x0a526f,emissiveIntensity:.55,roughness:.30}),keys:material(0xd1dbe4),glass:new THREE.MeshPhysicalMaterial({color:0x8dc8e5,transparent:true,opacity:.38,depthWrite:false,roughness:.2,side:THREE.DoubleSide})};
 function meshBox(parent,w,h,d,x,y,z,mat,shadow=true){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=shadow;m.receiveShadow=true;parent.add(m);return m;}
 function resetGroup(g){for(const obj of [...g.children])g.remove(obj);}
 function station(parent,x,y,z,idx,floor){
@@ -398,6 +403,15 @@ function tick(){
     $('floor-indicator').textContent=`Piso ${currentFloor+1} / ${totalFloors}`;
   }
   renderer.render(world,camera);
+  frameSamples++;
+  const now=performance.now();
+  if(!lastFpsSample)lastFpsSample=now;
+  else if(now-lastFpsSample>=1200){
+    const fps=Math.round(frameSamples*1000/(now-lastFpsSample));
+    const label=graphicsQuality.select.selectedOptions[0]?.textContent||'3D';
+    if($('fps'))$('fps').textContent=`${fps} FPS · ${label}`;
+    frameSamples=0;lastFpsSample=now;
+  }
 }
 walk.addEventListener('lock',()=>{started=true;document.body.classList.add('walk-active');$('crosshair').classList.add('visible');$('status').textContent='WASD: caminar · Shift: correr · E: puerta o asiento · F: usar PC · Tab: escenarios · Esc: mouse';});
 walk.addEventListener('unlock',()=>{document.body.classList.remove('walk-active');$('crosshair').classList.remove('visible');$('walk-tooltip').classList.remove('visible');keys.clear();velocity.set(0,0,0);});
