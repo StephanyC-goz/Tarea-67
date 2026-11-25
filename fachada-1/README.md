@@ -1,3 +1,21 @@
+# Versión principal · cambios gráficos (actualización)
+
+Este directorio mantiene la aplicación y fachada originales. Se aplicaron **únicamente mejoras gráficas**, sin sustituir sus modelos ni modificar usuarios, base de datos o funcionalidades originales.
+
+Novedades: cuatro perfiles de calidad (Rendimiento, Equilibrado, Alto y Ultra), sombras y resolución adaptables, iluminación equilibrada, baldosas texturizadas y medidor FPS en el recorrido. Los ajustes se comparten en el navegador entre editor, simulador, recorrido y fachada exterior.
+
+Desde esta misma carpeta ejecuta:
+```powershell
+npm ci
+npm run check
+npm run build
+```
+Los recursos precompilados anteriores se actualizarán con el comando `npm run build`. Después recarga con Ctrl+F5.
+
+**En este repositorio no se han añadido copias paralelas del proyecto.** Se eliminaron archivos ZIP y respaldos duplicados de la rama principal; el historial de Git permite recuperarlos.
+
+---
+
 # Fachada-1
 
 Lee primero **COMENZAR_AQUI.txt**. Extrae esta carpeta en `C:\laragon\www\fachada-1`, inicia Laragon y abre `http://localhost/fachada-1/FACHADA_EXTERIOR.html`. Incluye los archivos compilados; no requiere Git.
