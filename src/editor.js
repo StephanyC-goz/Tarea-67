@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { buildPiramideSENATI } from './piramide-senati.js';
+import {mountGraphicsQuality} from './calidad-grafica.js';
 import {EV52_ROOMS,ev52DeskPositions,pyramidScale,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
 import thumbManSenati from './assets/library/student-senati-m.webp';
 import thumbWomanSenati from './assets/library/student-senati-f.webp';
@@ -26,6 +27,7 @@ const $ = (id) => document.getElementById(id);
 const viewport = $('viewport');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeaf0f7);
+scene.fog=new THREE.Fog(0xeaf0f7,180,365);
 
 const camera = new THREE.PerspectiveCamera(45, 1, .1, 500);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -59,6 +61,15 @@ sun.shadow.mapSize.set(2048, 2048);
 scene.add(sun);
 const fill = new THREE.DirectionalLight(0xb6d6ff, .8);
 fill.position.set(12, 10, -12); scene.add(fill);
+// Ajustes de imagen compartidos, sin alterar posiciones ni objetos guardados.
+mountGraphicsQuality({container:document.querySelector('.right-panel .options-card'),
+  renderer,sun,scene,shadowRadius:56,
+  onChange:()=>{
+    const shadows=document.getElementById('opt-shadows');
+    if(shadows)shadows.checked=renderer.shadowMap.enabled;
+    const realistic=document.getElementById('opt-realistic');
+    if(realistic)realistic.checked=true;
+  }});
 
 const roomGroup = new THREE.Group(); roomGroup.name = 'Room'; scene.add(roomGroup);
 const objectGroup = new THREE.Group(); objectGroup.name = 'PlacedObjects'; scene.add(objectGroup);
