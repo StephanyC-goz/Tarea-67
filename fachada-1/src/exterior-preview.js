@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {buildPiramideSENATI} from './piramide-senati.js';
+import {mountGraphicsQuality} from './calidad-grafica.js';
 import {EXTERIOR_INVENTORY} from './exterior-campus.js';
 const stage=document.getElementById('stage');
 try{
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;stage.append(renderer.domElement);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#d9e5e3');scene.fog=new THREE.Fog('#d9e5e3',180,320);
  scene.add(new THREE.HemisphereLight('#f5f6ef','#7a8175',2.5));const sun=new THREE.DirectionalLight('#fff5dc',2.3);sun.position.set(-40,70,20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-85,right:85,top:75,bottom:-75});sun.shadow.bias=-.0003;scene.add(sun);
+  mountGraphicsQuality({container:document.querySelector('.panel'),renderer,sun,scene,shadowRadius:85});
  const building=buildPiramideSENATI(scene,{mode:'exterior',roofVisible:true});
  const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,500),orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.minDistance=4;orbit.maxDistance=240;orbit.maxPolarAngle=Math.PI*.49;
  const views=[[-32,3.8,35,-30,0,22],[-28,4,31,-28,0,22],[-48,4,2,-22,7,3],[-47,5,-13,-23,7,1],[3,5,-29,3,1,-15],[49,5,-23,28,1,-12],[39,5,29,29,1,8]];
