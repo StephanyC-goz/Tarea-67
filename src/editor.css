@@ -61,3 +61,11 @@ body.walk-mode #viewport canvas{pointer-events:auto}
 button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #46b6fa;outline-offset:2px}
 button:disabled{cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}.top-actions a:hover,.top-actions button:not(:disabled):hover{transform:none}}
+
+
+/* Calidad gráfica: estilo videojuego y presets editables en tiempo real. */
+.options-card .graphics-quality-control{display:flex;flex-direction:column;gap:7px;margin-top:15px;padding:13px;border:1px solid #d6e7ff;border-radius:12px;background:linear-gradient(125deg,#f4f9ff,#e9f3ff)}
+.options-card .graphics-quality-title{font-size:12px;font-weight:850;color:#234d8e}
+.options-card .graphics-quality-control select{width:100%;min-height:42px;padding:10px 12px;border-radius:9px;border:1px solid #c3d8f4;background:white;color:#17417a;font-weight:750}
+.options-card .graphics-quality-control select:focus-visible{outline:3px solid #67c7ff;outline-offset:2px}
+.options-card .graphics-quality-caption{font-size:10px;color:#6a829e;line-height:1.5}
