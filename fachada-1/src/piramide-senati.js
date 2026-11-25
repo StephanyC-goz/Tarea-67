@@ -219,10 +219,13 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const glassStart = doorZ-glassWidth/2;
   const glassEnd = doorZ+glassWidth/2;
   const wallBack = outerFace(-1,0),wallFront = outerFace(1,0);
-  const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[outerFace(-1,height),height+.21]];
-  const frontWing = [[recessEnd,0],[wallFront,0],[outerFace(1,height),height+.78],[recessEnd,height+.78]];
-  sideVolume(envelope,'Muro lateral de concreto junto a la entrada',westX,entryX+.10,rearWing,concrete);
-  sideVolume(envelope,'Volumen inclinado a la derecha de la entrada',westX,entryX+.10,frontWing,concrete);
+  const frontConcrete = standard(new THREE.Color(facadeColor).multiplyScalar(.79),.94);
+  frontConcrete.map = concrete.map;
+  const frontBlue = standard(new THREE.Color(signColor).multiplyScalar(.58),.72);
+  const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[Math.min(recessStart-Z(2),outerFace(-1,height)+Z(3.4)),height+.21]];
+  const frontWing = [[recessEnd,0],[wallFront,0],[Math.max(recessEnd+Z(1.8),outerFace(1,height)-Z(2.7)),height-levelHeight*.82],[recessEnd,height-levelHeight*.82]];
+  sideVolume(envelope,'Muro lateral de concreto junto a la entrada',westX,entryX+.10,rearWing,frontConcrete);
+  sideVolume(envelope,'Volumen inclinado a la derecha de la entrada',westX,entryX+.10,frontWing,frontConcrete);
   obstacles.push({x0:westX,x1:entryX,z0:wallBack,z1:recessStart},{x0:westX,x1:entryX,z0:recessEnd,z1:wallFront});
 
   const fascia = new THREE.Group();
@@ -278,9 +281,9 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const ground = new THREE.Group();
   ground.name = 'Muro azul y directorio de escuelas';
   shell.add(ground);
-  box(ground,.23,groundWallHeight,slitCenter-slitWidth/2-blueStart,entryX-.12,groundWallHeight/2,(blueStart+slitCenter-slitWidth/2)/2,blue);
-  box(ground,.23,groundWallHeight,recessEnd-slitCenter-slitWidth/2,entryX-.12,groundWallHeight/2,(recessEnd+slitCenter+slitWidth/2)/2,blue);
-  box(ground,.23,slitBottom,slitWidth,entryX-.12,slitBottom/2,slitCenter,blue);
+  box(ground,.23,groundWallHeight,slitCenter-slitWidth/2-blueStart,entryX-.12,groundWallHeight/2,(blueStart+slitCenter-slitWidth/2)/2,frontBlue);
+  box(ground,.23,groundWallHeight,recessEnd-slitCenter-slitWidth/2,entryX-.12,groundWallHeight/2,(recessEnd+slitCenter+slitWidth/2)/2,frontBlue);
+  box(ground,.23,slitBottom,slitWidth,entryX-.12,slitBottom/2,slitCenter,frontBlue);
   box(ground,.09,groundWallHeight-slitBottom,slitWidth,entryX+.02,(slitBottom+groundWallHeight)/2,slitCenter,shadow);
   box(ground,.28,groundWallHeight,glassStart-recessStart,entryX-.04,groundWallHeight/2,(glassStart+recessStart)/2,concrete);
   const directoryWidth = (slitCenter-slitWidth/2-blueStart)*.91;
@@ -292,9 +295,14 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const balcony = new THREE.Group();
   balcony.name = 'Vuelos, barandas y paños azules del lateral';
   envelope.add(balcony);
-  const ledgeY = [canopyY,levelHeight*3.52,levelHeight*4.48];
+  const ledgeY = [canopyY,levelHeight*1.72,levelHeight*3.52,levelHeight*4.48];
   for (const y of ledgeY) {
     if (y>=height-.55) continue;
+    if (y>levelHeight*2.5) {
+      box(balcony,1.9,.34,westSpan,entryX-.86,y,westCenter,frontConcrete);
+      box(balcony,1.92,.065,westSpan,entryX-.86,y-.20,westCenter,white);
+      continue;
+    }
     box(balcony,recessDepth+.75,.63,westSpan,westX+(recessDepth-.75)/2,y,westCenter,concrete);
     box(balcony,recessDepth+.68,.10,westSpan,westX+(recessDepth-.68)/2,y-.36,westCenter,white);
     box(balcony,.31,.55,westSpan,westX-.57,y+.49,westCenter,concrete);
@@ -305,13 +313,13 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
       beam(balcony,[railingX,y+.75,z],[railingX,y+1.08,z],.027,aluminum);
     }
   }
-  const upperPanelBottom = canopyY+.35;
+  const upperPanelBottom = levelHeight*1.72+.39;
   const upperPanelTop = Math.min(height-.55,levelHeight*3.52-.33);
   if (upperPanelTop>upperPanelBottom) {
     const middleGap = Math.min(.70,westSpan*.064);
     const panelWidth = (westSpan-middleGap)/2;
     for (const side of [-1,1]) box(balcony,.30,upperPanelTop-upperPanelBottom,panelWidth,entryX-.22,
-      (upperPanelTop+upperPanelBottom)/2,westCenter+side*(middleGap+panelWidth)/2,blue);
+      (upperPanelTop+upperPanelBottom)/2,westCenter+side*(middleGap+panelWidth)/2,frontBlue);
     box(balcony,.09,upperPanelTop-upperPanelBottom,middleGap,entryX+.03,(upperPanelTop+upperPanelBottom)/2,westCenter,shadow);
   }
   box(balcony,.24,height-upperPanelTop,westSpan,entryX+.06,(height+upperPanelTop)/2,westCenter,concrete);
@@ -321,14 +329,62 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     const paneWidth = westSpan/count;
     for (let i=0;i<count;i++) {
       const z = recessStart+(i+.5)*paneWidth;
-      box(balcony,.085,.82,paneWidth-.032,entryX-.25,y,z,windowTones[i%windowTones.length],false);
-      box(balcony,.12,.86,.035,entryX-.29,y,z+paneWidth/2,aluminum,false);
+      box(balcony, .085,1.02,paneWidth-.032,entryX-.25,y,z,windowTones[i%windowTones.length],false);
+      box(balcony, .12,1.06,.035,entryX-.29,y,z+paneWidth/2,aluminum,false);
     }
   }
-  const cantileverHeight = Math.min(2.8,levelHeight*.77);
+  const cantileverHeight = Math.min(3.4,levelHeight*.9);
   const cantileverY = height-cantileverHeight/2+.12;
   box(envelope,recessDepth+1.64,cantileverHeight,westSpan-.11,westX+(recessDepth-1.64)/2,cantileverY,westCenter,white);
   for (let seam=1;seam<13;seam++) box(envelope,.018,cantileverHeight-.07,.022,westX-1.65,cantileverY,recessStart+westSpan*seam/13,trim,false);
+
+
+  (function addReferenceFacade(group, walls, put, rod, mat, sx, sz, H, lh, west, entry, left, right, rear, fore, rearProfile, frontProfile, cement, metal, light) {
+    const detail = new group.constructor();
+    detail.name = 'Fachada de la plaza · referencia fotográfica';
+    walls.add(detail);
+    const joint = mat('#71665d',.97);
+    const steel = mat('#717b83',.57,.38);
+    // Juntas horizontales visibles sobre los paños trapezoidales de concreto.
+    for (const profile of [rearProfile,frontProfile]) {
+      const leftSide = profile===rearProfile;
+      const low = leftSide?profile[0][0]:profile[1][0];
+      const high = leftSide?profile[3][0]:profile[2][0];
+      const edge = leftSide?left:right;
+      const top = profile[2][1];
+      for(let yy=lh*.45;yy<top-.18;yy+=lh*.43) {
+        const slope = low+(high-low)*yy/top;
+        const span = Math.abs(edge-slope);
+        if(span>.10) put(detail,.014,.025,span-.08,west-.009,yy,(edge+slope)/2,joint,false);
+      }
+    }
+    // Torre vertical a la derecha del cuerpo blanco: no invade el vano ni los interiores.
+    const coreW=sz(1.30),coreH=H+lh*.52;
+    put(detail,sx(1.48),coreH,coreW,west+sx(.76),coreH/2,right+coreW/2,cement);
+    // Vuelos escalonados a la izquierda del vacío central.
+    const levels=[lh*1.92,lh*2.52,lh*3.12,lh*3.82];
+    levels.forEach((yy,index)=>{
+      if(yy>H-.8)return;
+      const run=sx(2.1-index*.24);
+      put(detail,run,.24,sz(1.08),entry-run/2,yy,left+sz(.54),cement);
+      put(detail,run,.065,sz(1.08),entry-run/2,yy-.16,left+sz(.54),light,false);
+    });
+    // Marcos de los dos letreros superiores vistos de canto desde la plaza.
+    for(const [zz,rise] of [[rear+sz(2.6),lh*1.16],[fore-sz(2.4),lh*.96]]) {
+      const a=[west+sx(.35),H+.18,zz], b=[west+sx(5.9),H+.18,zz], c=[west+sx(5.9),H+rise,zz];
+      rod(detail,a,b,.055,steel);rod(detail,b,c,.055,steel);rod(detail,c,a,.055,steel);
+      for(let i=1;i<5;i++){
+        const k=i/5,xx=a[0]+(b[0]-a[0])*k;
+        rod(detail,[xx,a[1],zz],[xx,a[1]+(c[1]-a[1])*k,zz],.023,steel);
+      }
+    }
+    // Pequeñas luminarias sobre la coronación frontal.
+    for(let i=0;i<5;i++){
+      const zz=left+(right-left)*(i+.5)/5;
+      rod(detail,[west+.12,H+.25,zz],[west+.12,H+.72,zz],.022,metal);
+      put(detail,.23,.12,.18,west+.05,H+.75,zz,metal,false);
+    }
+  })(shell,envelope,box,beam,standard,X,Z,height,levelHeight,westX,entryX,recessStart,recessEnd,wallBack,wallFront,rearWing,frontWing,frontConcrete,aluminum,white);
 
   // El extremo opuesto conserva el remate azul vertical y las ventanas estrechas.
   box(envelope,.43,height,front-back,mainRight+.11,height/2,(front+back)/2,concrete);
