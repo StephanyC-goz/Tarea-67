@@ -14,3 +14,11 @@
 .pc-emblem{display:grid;place-items:center;width:74px;height:74px;background:#1257c8;border-radius:23px;color:#fff;font-size:47px;font-weight:900;margin:auto;transform:rotate(-7deg)}
 .pc-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:16px 0 22px}.pc-actions a{background:#0c5bd1;border-radius:10px;color:#fff;text-decoration:none;padding:12px 18px;font-weight:800}.pc-actions a:nth-child(2){background:#0e9fba}
 .pc-main small{color:#64748b}
+
+
+/* Calidad grafica 3D - selector compartido en vistas existentes */
+.graphics-quality-control{display:flex;flex-direction:column;gap:7px;margin:16px 0;padding:13px;border:1px solid #cbdff2;border-radius:12px;background:linear-gradient(135deg,#fff,#e8f3ff)}
+.graphics-quality-title{font-size:12px;font-weight:850;color:#22548b}
+.graphics-quality-control select{width:100%;padding:10px 12px;min-height:42px;border:1px solid #b9d2ed;border-radius:8px;background:#fff;color:#254768;font-weight:700}
+.graphics-quality-control select:focus-visible{outline:3px solid #7ecbff;outline-offset:2px}
+.graphics-quality-caption{font-size:11px;line-height:1.4;color:#5b7899}
