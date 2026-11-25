@@ -1,3 +1,21 @@
+# Versión principal · cambios gráficos (actualización)
+
+Este directorio mantiene la aplicación y fachada originales. Se aplicaron **únicamente mejoras gráficas**, sin sustituir sus modelos ni modificar usuarios, base de datos o funcionalidades originales.
+
+Novedades: cuatro perfiles de calidad (Rendimiento, Equilibrado, Alto y Ultra), sombras y resolución adaptables, iluminación equilibrada, baldosas texturizadas y medidor FPS en el recorrido. Los ajustes se comparten en el navegador entre editor, simulador, recorrido y fachada exterior.
+
+Desde esta misma carpeta ejecuta:
+```powershell
+npm ci
+npm run check
+npm run build
+```
+Los recursos precompilados anteriores se actualizarán con el comando `npm run build`. Después recarga con Ctrl+F5.
+
+**En este repositorio no se han añadido copias paralelas del proyecto.** Se eliminaron archivos ZIP y respaldos duplicados de la rama principal; el historial de Git permite recuperarlos.
+
+---
+
 # Fachada-1
 
 Lee primero **COMENZAR_AQUI.txt**. Extrae esta carpeta en `C:\laragon\www\fachada-1`, inicia Laragon y abre `http://localhost/fachada-1/FACHADA_EXTERIOR.html`. Incluye los archivos compilados; no requiere Git.
@@ -43,7 +61,7 @@ Versión de integración: 2.0.0. Integra el editor de escenarios 3D PHP/MySQL y 
 - Editar objetos: arrastrar, rotar, duplicar, escalar, renombrar, eliminar y personalizar pantallas; personas estilizadas con ropa SENATI.
 - Guardar y cargar escenarios con PHP + MySQL. Hay **versiones de respaldo** antes de reemplazar un escenario, con botón «Versiones» para recuperarlas.
 - Simulador de incendios, sismos, accidentes y riesgo eléctrico: A*, rutas, alarmas, registro de movimiento, pausa, reinicio y **guardado de resultados en MySQL**. En la Pirámide se simula **solo la planta baja** (sin datos estructurales o rutas verificadas). La plantilla genérica de dos pisos mantiene la simulación con escalera.
-- El proyecto original de Pirámide exterior V1 se conserva como referencia dentro del ZIP como `referencias/modelo_exterior_original_V1.zip`.
+- El respaldo exterior V1 y demás versiones anteriores se conservan recuperables en el historial Git, no duplicados en el árbol principal.
 
 ## Requisitos
 

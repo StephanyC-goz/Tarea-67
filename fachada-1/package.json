@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build",
     "watch": "vite build --watch",
-    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v10.mjs && node scripts/verificar-exterior.mjs"
+    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v10.mjs && node scripts/verificar-exterior.mjs && node scripts/verificar-graficos.mjs",
+    "check:graficos": "node scripts/verificar-graficos.mjs"
   },
   "dependencies": {
     "three": "0.180.0"
