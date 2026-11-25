@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { buildCampusExterior } from './exterior-campus.js';
 import {createPolishedFloorTexture} from './calidad-grafica.js';
-import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_BATHROOMS, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, pyramidScale} from './ev52-layout.js';
+import {EV52_ROOMS, EV52_DOORS, EV52_ELEVATORS, EV52_BATHROOMS, EV52_SUPPORT_ROOMS, EV52_STAIRWELLS, EV52_WALL_SEGMENTS, pyramidScale} from './ev52-layout.js';
 
 const standard = (c,r=.77,met=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:met});
 function box(parent,w,h,d,x,y,z,material,casts=true){
@@ -429,6 +429,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   const liftLayouts=EV52_ELEVATORS.map(l=>({...l,x:X(l.x),xMin:X(l.xMin),xMax:X(l.xMax),z:Z(l.z),zTop:Z(l.zTop),zBottom:Z(l.zBottom),accessZ:Z(l.accessZ)}));
   const liftLayout=liftLayouts[0];
   const bathrooms=EV52_BATHROOMS.map(r=>({...r,x0:X(r.x0),x1:X(r.x1),z0:Z(r.z0),z1:Z(r.z1)}));
+  const supportRooms=EV52_SUPPORT_ROOMS.map(r=>({...r,x0:X(r.x0),x1:X(r.x1),z0:Z(r.z0),z1:Z(r.z1)}));
   const shell=new THREE.Group();shell.name='Fachada';root.add(shell);
   const structure=new THREE.Group();structure.name='Soportes inclinados visibles';root.add(structure);
   const envelope=new THREE.Group();envelope.name='Muros envolventes';root.add(envelope);
@@ -496,6 +497,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       halfWidth:half});
     wallZ(g,door.z,door.x-half,door.x+half,base+2.44,Math.max(.05,wallHeight-2.44));
   }
+  function commonAreaV12(g,r,boxes,base,put,mat){const top=mat('#c9b7a1',.65),leg=mat('#687786',.58,.25),cx=(r.x0+r.x1)/2;for(const [dx,dz] of [[-1.5,2.55],[1.5,2.55],[0,4.35]]){const x=cx+dx,z=r.z0+dz;if(x-.65<r.x0+.2||x+.65>r.x1-.2||z+.65>r.z1-.2)continue;put(g,1.3,.075,1.3,x,base+.79,z,top,false);for(const a of [-.49,.49])for(const b of [-.49,.49])put(g,.06,.75,.06,x+a,base+.39,z+b,leg,false);boxes.push({x0:x-.65,x1:x+.65,z0:z-.65,z1:z+.65})}}
   function furnishServices(g,rooms,stairs,floorBoxes,base,levelH,put,mat,label){
  const ceramic=mat('#f7f8f4',.34),tile=mat('#b8d7db',.67),partition=mat('#e0e7e8',.81),steel=mat('#7a8994',.45,.35);
  function solid(w,h,d,x,y,z,material){put(g,w,h,d,x,base+y,z,material,false);floorBoxes.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2})}
@@ -523,9 +525,10 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
     );
     for(const door of doors)addDoor(floor,door,f,base);
     furnishServices(floor,bathrooms,stairsLayout,floorWallBoxes[f],base,levelHeight,box,standard,placeFloorLabel);
-    for(const r of rooms){
+    for(const r of [...rooms,...supportRooms]){
       const cx=(r.x0+r.x1)/2,cz=(r.z0+r.z1)/2;
       placeFloorLabel(floor,`${f+1} · ${r.label}`,cx,cz,Math.min(2.8,r.x1-r.x0-.20),'#2e5680',base+.09);
+      if(r.kind==='common')commonAreaV12(floor,r,floorWallBoxes[f],base,box,standard);
       if(r.pcs){
         const tx=cx+(r.side==='lower'?-1.7*scaleX:0),tz=r.z0+.75;
         box(floor,Math.min(1.60,r.x1-r.x0-.22),.80,.07,tx,base+1.69,r.z0+.18,boardSurface,false);
@@ -535,8 +538,8 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
       }
     }
     // Franja continua de circulación: ~3,23 m en la escala 56 × 38.
-    box(floor,X(17.9*56/34),.018,Z(1.70*38/20),X(.40*56/34),base+.088,Z(-2.36*38/20),standard(0xb4d7ce,.95),false);
-    placeFloorLabel(floor,'PASADIZO · 3,2 m APROX.',0,Z(-2.36*38/20),4.60,'#246a61',base+.108);
+    box(floor,X(10.0),.018,Z(3.2),X(0),base+.088,Z(0),standard(0xb4d7ce,.95),false);
+    placeFloorLabel(floor,'PASADIZO · 3,2 m APROX.',0,Z(-.9),4.60,'#246a61',base+.108);
     placeFloorLabel(floor,f===0?'VESTÍBULO CENTRAL':'VESTÍBULO · PISO '+(f+1),0,.15,4.10,'#246a61',base+.055);
     for(const lift of liftLayouts){
       placeFloorLabel(floor,lift.id.toUpperCase(),lift.x,lift.accessZ+.20,1.85,'#126f7a',base+.075);
@@ -595,7 +598,7 @@ export function buildPiramideSENATI(parent,{width=56,depth=38,levelHeight=3.8,le
   return {root,roof,shell,envelope,interior,structure,environment,campus,
     footprint:{left:floorBounds.left,right:exterior.rightBoundary,back,front},classroomDoors,setClassroomDoorOpen,
     classroomBounds:corridorBounds,scaleX,scaleZ,width,depth,
-    setDoorOpen:exterior.setDoorOpen,entry:exterior.entry,stairs:staircases[1],staircases,elevator,elevators:liftLayouts,rooms,bathrooms,
+    setDoorOpen:exterior.setDoorOpen,entry:exterior.entry,stairs:staircases[1],staircases,elevator,elevators:liftLayouts,rooms,bathrooms,supportRooms,
     firstFloorWalls:floorWallBoxes[0],floorWallBoxes,firstFloorIsEV52:true,
     walkBounds:{left:floorBounds.left,right:floorBounds.right,back:floorBounds.back,front:floorBounds.front},
     setMode(nextMode,nextRoof){useMode({shell,envelope,roof,interior,mode:nextMode,roofVisible:nextRoof});}};
