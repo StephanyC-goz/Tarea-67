@@ -5,7 +5,7 @@ import { dirname,resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   EV52_WALL_SEGMENTS, EV52_ROOMS, EV52_DOORS,
-  EV52_STAIRWELLS, EV52_ELEVATOR, ev52DeskPositions,
+  EV52_STAIRWELLS, EV52_ELEVATOR, EV52_ELEVATORS, EV52_BATHROOMS, ev52DeskPositions,
   getPyramidDimensions, pyramidScale,
   DEFAULT_PYRAMID_WIDTH, DEFAULT_PYRAMID_DEPTH, DEFAULT_LEVEL_HEIGHT
 } from '../src/ev52-layout.js';
@@ -16,9 +16,17 @@ assert.equal(DEFAULT_PYRAMID_DEPTH,38);
 assert.equal(DEFAULT_LEVEL_HEIGHT,3.8);
 assert.equal(EV52_ROOMS.length,10,'Diez ambientes independientes');
 assert.equal(EV52_STAIRWELLS.length,2,'Dos núcleos de escalera');
-assert.equal(EV52_DOORS.length,EV52_ROOMS.length+1,'Una puerta por salón más servicios');
+assert.equal(EV52_DOORS.length,EV52_ROOMS.length+EV52_BATHROOMS.length,'Una puerta por aula y baño');
 assert(EV52_WALL_SEGMENTS.length>=50&&EV52_WALL_SEGMENTS.length<90,'Trazado modular simplificado');
-assert.equal(ev52DeskPositions().length,20,'20 escritorios didácticos');
+assert.equal(ev52DeskPositions().length,40,'40 escritorios didácticos, cuatro por aula');
+assert.equal(EV52_BATHROOMS.length,2);
+assert.equal(EV52_ELEVATORS.length,2);
+const cores=[...EV52_STAIRWELLS,...EV52_ELEVATORS].map(c=>({x0:c.xMin,x1:c.xMax,z0:c.zTop,z1:c.zBottom}));
+const zones=[...EV52_ROOMS,...EV52_BATHROOMS,...cores];
+for(let i=0;i<zones.length;i++)for(let j=i+1;j<zones.length;j++){
+  const a=zones[i],b=zones[j];
+  assert(!(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1e-6&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>1e-6),'Los recintos y núcleos no se superponen');
+}
 const rooms=new Set(EV52_ROOMS.map(r=>r.id));
 for(const r of EV52_ROOMS){
   assert(r.x0<r.x1&&r.z0<r.z1,`${r.id}: superficie positiva`);
@@ -71,7 +79,7 @@ for(const f of ['src/ev52-layout.js','src/piramide-senati.js','src/editor.js','s
 assert(content('src/editor.js').includes('apply-dimensions'),'Editor mantiene escalado configurable');
 assert(content('src/recorrer.js').includes('takeElevator()'),'Recorrido tiene transporte simulado en ascensor');
 assert(content('src/piramide-senati.js').includes('floorWallBoxes'),'Colisiones por piso preservadas');
-console.log(`V10 OK: ${m.width}×${m.depth} m, ${EV52_ROOMS.length} salones/ambientes, ${EV52_WALL_SEGMENTS.length} tramos de paredes, ${EV52_STAIRWELLS.length} escaleras, 1 ascensor y ${ev52DeskPositions().length} estaciones por piso.`);
+console.log(`V10 OK: ${m.width}×${m.depth} m, ${EV52_ROOMS.length} salones/ambientes, ${EV52_WALL_SEGMENTS.length} tramos de paredes, ${EV52_STAIRWELLS.length} escaleras, 2 ascensores y ${ev52DeskPositions().length} estaciones por piso.`);
 console.log(`Ejemplo aula N3: ${m.exampleClassroom.width.toFixed(2)}×${m.exampleClassroom.depth.toFixed(2)} m; pasadizo ${m.corridorWidth.toFixed(2)} m; escalera ${m.staircase.width.toFixed(2)}×${m.staircase.length.toFixed(2)} m; ascensor ${m.elevator.width.toFixed(2)}×${m.elevator.depth.toFixed(2)} m.`);
 
 // Guardar referencia física de puertas, escaleras y elevador (metros).

@@ -116,17 +116,11 @@ function connected(a,b){
 }
 for(let i=0;i<campus.route.length;i++)assert(connected(campus.route[i],campus.route[(i+1)%7]),`Debe existir paso del punto ${i+1} al ${(i+1)%7+1}`);
 console.log('Exterior OK: puerta lateral operativa y recorrido 1–7 continuo en ambas direcciones.');
-// Comparar las mallas interiores con la versión inmediatamente anterior al cambio de fachada.
-const baselineCommit='e3f9118fbea84ccd9729db24436e0041920efe54';
-let original;
-try{original=execFileSync('git',['show',`${baselineCommit}:src/piramide-senati.js`],{encoding:'utf8',stdio:['ignore','pipe','ignore']});}catch{}
-if(original){
- const temp=new URL(`../src/.baseline-exterior-test-${process.pid}.mjs`,import.meta.url);
- try{
-  writeFileSync(temp,original);const before=(await import(temp.href)).buildPiramideSENATI(new THREE.Group());
-  function digest(group){const data=[];group.traverse(o=>{if(o.isMesh)data.push({p:o.position.toArray(),r:o.quaternion.toArray(),s:o.scale.toArray(),g:o.geometry.type,vertices:Array.from(o.geometry.attributes.position.array),indices:o.geometry.index?Array.from(o.geometry.index.array):null,color:o.material.color?.getHex(),opacity:o.material.opacity});});return createHash('sha256').update(JSON.stringify(data)).digest('hex');}
-  assert.equal(digest(current.interior),digest(before.interior),'Geometría y materiales de los seis pisos intactos');
-  for(const name of ['floorWallBoxes','staircases','elevator','walkBounds'])assert.deepEqual(current[name],before[name]);
-  console.log('Conservación OK: los seis pisos, muros interiores, escaleras y ascensor coinciden con la versión anterior.');
- }finally{if(existsSync(temp))unlinkSync(temp);}
-}
+// La planta modular V11 sustituye intencionalmente el interior anterior.
+assert.equal(current.rooms.length,10);
+assert.equal(current.bathrooms.length,2);
+assert.equal(current.elevators.length,2);
+assert.equal(current.classroomDoors.length,72);
+assert.equal(current.floorWallBoxes.length,6);
+assert(current.floorWallBoxes.every(w=>w.length===current.floorWallBoxes[0].length));
+console.log('Interior modular: seis plantas, 10 aulas, dos baños, dos ascensores y dos escaleras por planta.');

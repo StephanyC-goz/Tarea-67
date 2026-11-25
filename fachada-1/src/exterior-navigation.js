@@ -27,7 +27,7 @@ export function canCrossBuilding(from, to, {footprint, entry, doorOpen, floor=0,
 }
 
 export function canOccupyPyramidInterior(x, z, {walkBounds, entry, doorOpen, floor=0, radius=.18}) {
-  if (x>walkBounds.right-radius || z<walkBounds.back+radius) return false;
+  if (x>walkBounds.right-radius || z<walkBounds.back+radius || z>(walkBounds.front??Infinity)-radius) return false;
   if (x>=walkBounds.left+radius) return true;
   return floor===0 && doorOpen && entry.side==='left' && inDoorOpening(x,z,entry,radius);
 }

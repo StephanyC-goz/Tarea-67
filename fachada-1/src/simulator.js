@@ -478,7 +478,7 @@ function loadDemoScenario(){
   $('show-grid').textContent=gridVisible?'Ocultar cuadrícula':'Mostrar cuadrícula';
   $('save-results').disabled=true;
   $('saved-runs').textContent='Para guardar resultados, abre un escenario almacenado por el administrador en MySQL.';
-  setStatus('Demostración EV-52 aproximada: 20 puestos distribuidos en aulas, 8 participantes. Las rutas son ilustrativas y NO equivalen al plano oficial.');
+  setStatus('Demostración EV-52 aproximada: 40 puestos distribuidos en aulas, 8 participantes. Las rutas son ilustrativas y NO equivalen al plano oficial.');
   fitRenderer();
 }
 

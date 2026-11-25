@@ -1321,7 +1321,7 @@ function populatePyramidClassroomFloor(floorIndex,{silent=true}={}){
       {rotationY:Math.PI,silent:true,seated:true,accessoryOf:chair.userData.objectId});
   });
   for(const r of EV52_ROOMS.filter(r=>r.pcs)){
-    const x=(r.x0+r.x1)/2*sx,z=(r.z0+.46)*sz;
+    const x=((r.x0+r.x1)/2+(r.side==='lower'?-1.7:0))*sx,z=r.z0*sz+1.4;
     addObject('teacher',new THREE.Vector3(x,y,z),{rotationY:0,silent:true});
     addObject('fan',new THREE.Vector3(x,y,(r.z0+r.z1)/2*sz),{silent:true});
   }

@@ -77,11 +77,11 @@ function renderDemoFurniture(){
       placeDecorModel(idx%2===0?'man-senati':'woman-senati',desk.x,floorY,desk.z+.90,Math.PI,{seated:true});
     });
     for(const room of EV52_ROOMS.filter(r=>r.pcs)){
-      const x=(room.x0+room.x1)/2*sx,z=(room.z0+.44)*sz;
+      const x=((room.x0+room.x1)/2+(room.side==='lower'?-1.7:0))*sx,z=room.z0*sz+1.4;
       placeDecorModel('teacher',x+.15,floorY,z,0,{seated:false});
       placeDecorModel('fan',x,floorY,(room.z0+room.z1)/2*sz,0,{});
     }
-    placeDecorModel('safety-exit',0,floorY,(building.entry.frontZ-1.15),Math.PI,{});
+    for(const st of building.staircases)placeDecorModel('safety-exit',st.x,floorY,st.zBottom+1.1,Math.PI,{});
     placeDecorModel('fire-extinguisher',7.9*sx,floorY,1.50*sz,-Math.PI/2,{});
     placeDecorModel('safety-rules',-8.0*sx,floorY,1.5*sz,Math.PI/2,{});
   }else{
@@ -270,14 +270,13 @@ function openPC(){
 function closePC(){pcOpen=false;const panel=$('pc-panel');if(panel)panel.hidden=true;}
 function nearElevator(maxDistance=2.50){
   if(kind!=='piramide'||!building?.elevator)return false;
-  const el=building.elevator;
-  return Math.hypot(camera.position.x-el.x,camera.position.z-el.accessZ)<maxDistance;
+  return (building.elevators||[building.elevator]).map(el=>({el,d:Math.hypot(camera.position.x-el.x,camera.position.z-el.accessZ)})).filter(o=>o.d<maxDistance).sort((a,b)=>a.d-b.d)[0]?.el||false;
 }
 function takeElevator(){
-  if(!nearElevator())return false;
+  const lift=nearElevator();if(!lift)return false;
   const next=(currentFloor+1)%totalFloors;
   setFloor(next);
-  camera.position.set(building.elevator.x,next*H+1.68,building.elevator.accessZ);
+  camera.position.set(lift.x,next*H+1.68,lift.accessZ);
   velocity.set(0,0,0);stairRoute=null;
   $('status').textContent=`Ascensor didáctico: planta ${next+1}. Presiona E para ir a la siguiente planta.`;
   return true;
@@ -305,7 +304,8 @@ function canMove(x,z){
       if(x>wall.x0-r&&x<wall.x1+r&&z>wall.z0-r&&z<wall.z1+r)return false;
     }
     for(const door of building.classroomDoors){
-      if(door.floor!==currentFloor||door.open)continue;
+      if(door.floor!==currentFloor)continue;
+      if(door.open){const dx=x-door.pivot.position.x,dz=z-door.pivot.position.z,c=Math.cos(door.pivot.rotation.y),s=Math.sin(door.pivot.rotation.y),along=dx*c-dz*s,across=dx*s+dz*c;if(along>-r&&along<2*door.halfWidth+r&&Math.abs(across)<r+.04)return false;continue;}
       if(Math.abs(z-door.z)<r+.075&&Math.abs(x-door.x)<(door.halfWidth||.84)+r)return false;
     }
   }
@@ -422,7 +422,7 @@ $('sit-button').addEventListener('click',()=>seatedAt?standFromPC():sitAtPC());
 $('pc-button').addEventListener('click',openPC);
 $('pc-close').addEventListener('click',closePC);
 $('scenario-select').addEventListener('change',e=>{if(walk.isLocked)walk.unlock();loadScene(e.target.value);});
-$('floor-select').addEventListener('change',e=>{if(walk.isLocked)walk.unlock();setFloor(Number(e.target.value));camera.position.set(0,currentFloor*H+1.68,frontZ-1.8);camera.rotation.set(0,0,0,'YXZ');velocity.set(0,0,0);});
+$('floor-select').addEventListener('change',e=>{if(walk.isLocked)walk.unlock();setFloor(Number(e.target.value));stairRoute=null;camera.position.set(0,currentFloor*H+1.68,0);camera.rotation.set(0,0,0,'YXZ');velocity.set(0,0,0);});
 $('speed').addEventListener('input',e=>$('speed-value').textContent=e.target.value);
 $('sensitivity').addEventListener('input',e=>{walk.pointerSpeed=Number(e.target.value);$('sensitivity-value').textContent=e.target.value;});
 $('fov').addEventListener('input',e=>{camera.fov=Number(e.target.value);camera.updateProjectionMatrix();$('fov-value').textContent=e.target.value;});
