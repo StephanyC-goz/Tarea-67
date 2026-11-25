@@ -57,6 +57,74 @@ function slopeBlock(width, run, low, high, bottomLow, bottomHigh) {
   return block;
 }
 
+
+/** Césped tridimensional procedural: hojas de cinco vértices, agrupadas por
+ * sectores para limitar draw calls y permitir el descarte por cámara.
+ * El viento se calcula en el shader, sin mover colisiones ni raíces. */
+function createCampusGrass(parent){
+  const clock={value:0};
+  const material=new THREE.MeshStandardMaterial({
+    color:0xffffff,vertexColors:true,side:THREE.DoubleSide,roughness:.94,metalness:0
+  });
+  material.customProgramCacheKey=()=> 'senati-grass-wind-v1';
+  material.onBeforeCompile=shader=>{
+    shader.uniforms.grassTime=clock;
+    shader.vertexShader=shader.vertexShader.replace('#include <common>',
+      '#include <common>\nattribute float grassBend;\nuniform float grassTime;');
+    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n'+
+      'float grassWave = sin(grassTime * 1.65 + position.x * 0.32 + position.z * 0.21);\n'+
+      'float grassGust = 0.55 + 0.45 * sin(grassTime * 0.49 - position.x * 0.16 + position.z * 0.12);\n'+
+      'float grassRipple = sin(grassTime * 3.2 + position.x * 2.1 + position.z * 1.7);\n'+
+      'transformed.x += grassBend * (0.32 + 0.40 * grassWave * grassGust + 0.07 * grassRipple);\n'+
+      'transformed.z += grassBend * (0.18 + 0.22 * grassWave * grassGust);\n');
+  };
+  const palette=['#365523','#476b28','#5b7d32','#718f3e','#344e22','#839e48','#567234'].map(c=>new THREE.Color(c));
+  function addPatch(x,z,w,d,y){
+    if(w<=.1||d<=.1)return;
+    const nx=Math.ceil(w/5),nz=Math.ceil(d/5),tw=w/nx,td=d/nz;
+    for(let ix=0;ix<nx;ix++)for(let iz=0;iz<nz;iz++){
+      const minX=x-w/2+ix*tw,minZ=z-d/2+iz*td;
+      let seed=(Math.imul(Math.round(minX*100),73856093)^Math.imul(Math.round(minZ*100),19349663)^0x9e3779b9)>>>0;
+      const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+      const pos=[],colors=[],bend=[],indices=[];
+      const count=Math.min(5200,Math.ceil(tw*td*170));
+      function vertex(px,py,pz,col,factor,weight){
+        pos.push(px,py,pz);colors.push(col.r*factor,col.g*factor,col.b*factor);bend.push(weight);
+      }
+      for(let j=0;j<count;j++){
+        const bx=minX+.03+rand()*Math.max(0,tw-.06),bz=minZ+.03+rand()*Math.max(0,td-.06);
+        const patchiness=.5+.5*Math.sin(bx*1.65+Math.sin(bz*1.23)*1.9);
+        const height=.055+Math.pow(rand(),1.55)*(.15+.11*patchiness);
+        const halfWidth=.007+rand()*.012;
+        const angle=rand()*Math.PI*2,dx=Math.cos(angle),dz=Math.sin(angle);
+        const lean=height*(.15+rand()*.50),lx=-dz*lean,lz=dx*lean;
+        const col=palette[Math.floor(rand()*palette.length)];
+        const idx=pos.length/3;
+        vertex(bx-dx*halfWidth,y,bz-dz*halfWidth,col,.44,0);
+        vertex(bx+dx*halfWidth,y,bz+dz*halfWidth,col,.56,0);
+        vertex(bx+lx*.38-dx*halfWidth*.55,y+height*.58,bz+lz*.38-dz*halfWidth*.55,col,.83,height*.34);
+        vertex(bx+lx*.38+dx*halfWidth*.55,y+height*.58,bz+lz*.38+dz*halfWidth*.55,col,.95,height*.34);
+        vertex(bx+lx,y+height,bz+lz,col,1.12,height);
+        indices.push(idx,idx+1,idx+2,idx+1,idx+3,idx+2,idx+2,idx+3,idx+4);
+      }
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+      geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      geometry.setAttribute('grassBend',new THREE.Float32BufferAttribute(bend,1));
+      geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+      // Compensar el desplazamiento máximo del viento en el descarte de cámara.
+      geometry.boundingBox.expandByScalar(.35);geometry.boundingSphere.radius+=.35;
+      const mesh=new THREE.Mesh(geometry,material);
+      mesh.name='Césped 3D · brisa y ráfagas';mesh.receiveShadow=true;mesh.castShadow=false;
+      mesh.userData.animatedGrass=true;
+      mesh.onBeforeRender=()=>{clock.value=performance.now()*.001;};
+      parent.add(mesh);
+    }
+  }
+  return addPatch;
+}
+
 export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb',entrance,buildingObstacles=[]}={}){
   const root=new THREE.Group();root.name='Exterior · recorrido del video 1–7';parent.add(root);
   // Escalar coordenadas de implantación sin deformar mobiliario ni personas.
@@ -77,7 +145,7 @@ export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb
   }
   function texture(kind){
     const c=document.createElement('canvas');c.width=c.height=256;const t=c.getContext('2d');
-    t.fillStyle=kind==='brick'?'#8d9290':kind==='grass'?'#6f9245':kind==='tile'?'#bcbeb9':'#b5b4ad';t.fillRect(0,0,256,256);
+    t.fillStyle=kind==='brick'?'#8d9290':kind==='grass'?'#45612e':kind==='tile'?'#bcbeb9':'#b5b4ad';t.fillRect(0,0,256,256);
     // Semilla fija: el mismo entorno en cada carga.
     let seed=78;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
     for(let i=0;i<2400;i++){const a=rand();t.fillStyle=`rgba(${a>.5?'255,255,230':'40,48,30'},.09)`;t.fillRect(rand()*256,rand()*256,1+rand()*3,1+rand()*3);}
@@ -89,6 +157,7 @@ export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb
   }
   const textures={brick:texture('brick'),concrete:texture('concrete'),grass:texture('grass'),tile:texture('tile')};
   const surfaceMaterials=new Map();
+  const addGrassPatch=createCampusGrass(root);
   function surface(name,x,z,w,d,y=0,kind='concrete'){
     x=X(x);z=Z(z);w=X(w);d=Z(d);
     const key=`${kind}:${w}:${d}`;
@@ -97,11 +166,14 @@ export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb
       const tileWidth=kind==='tile'?4:kind==='brick'?2:4;
       const tileDepth=kind==='tile'?1.18:tileWidth;
       tx.repeat.set(w/tileWidth,d/tileDepth);
+      tx.anisotropy=8;
       surfaceMaterials.set(key,new THREE.MeshStandardMaterial({map:tx,roughness:.97}));
     }
     // Separación subcentimétrica para evitar parpadeo en cruces de pavimentos.
     const o=box(root,w,.12,d,x,y-.06+(surfaces.length+1)*.00015,z,surfaceMaterials.get(key));o.name=name;
-    surfaces.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,y});return o;
+    surfaces.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,y});
+    if(kind==='grass')addGrassPatch(x,z,w,d,o.position.y+.063);
+    return o;
   }
   function board(g,text,w,h,x,y,z,color='#1251cb',rotation=0){
     const c=document.createElement('canvas');c.width=1024;c.height=512;const ctx=c.getContext('2d');
