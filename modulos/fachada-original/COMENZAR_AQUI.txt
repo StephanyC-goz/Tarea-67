@@ -1,0 +1,26 @@
+FACHADA-1 - PROYECTO LISTO PARA LARAGON
+
+1. Extrae el ZIP. Dentro debe quedar UNA carpeta llamada fachada-1.
+2. Copia esa carpeta a C:\laragon\www\
+   El archivo debe estar exactamente en:
+   C:\laragon\www\fachada-1\FACHADA_EXTERIOR.html
+3. En Laragon pulsa INICIAR TODO.
+4. Abre http://localhost/fachada-1/FACHADA_EXTERIOR.html
+   O ejecuta INICIAR_LARAGON.bat dentro de fachada-1.
+
+PROYECTO COMPLETO:
+http://localhost/fachada-1/login.php
+Si nunca creaste una cuenta, abre registro.php: la primera cuenta
+creada desde localhost sera administradora.
+
+El visor exterior funciona sin iniciar sesion y sin MySQL.
+El proyecto completo utiliza la base de datos aula3d.
+Si ya la tienes, conserva esa base y tus usuarios: no la importes otra vez.
+Solo en una instalacion nueva importa database/schema.sql.
+
+Los archivos 3D estan compilados. No necesitas npm ni Git para abrirlos.
+No abras los archivos PHP haciendo doble clic: usa localhost.
+Si Apache usa otro puerto, anadelo: http://localhost:8080/fachada-1/
+
+La piramide y sus interiores se conservan. El exterior es una
+reconstruccion visual del video con distancias aproximadas.

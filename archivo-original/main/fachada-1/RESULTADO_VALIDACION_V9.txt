@@ -1,0 +1,12 @@
+PIRÁMIDE SENATI V9 – RESULTADO DE VALIDACIÓN LOCAL
+
+- npm run check: CORRECTO; verifica enlaces DOM, archivos, sintaxis de módulos y disposiciones geométricas.
+- php -l index.php y recorrer.php: CORRECTO.
+- El modelo es de 56 × 38 m; 6 plantas, 3.8 m por planta.
+- 10 ambientes con puertas hacia los espacios comunes.
+- Se verificó que ningún muro cruza los 2 huecos de escalera ni el hueco de ascensor.
+- Se corrigió el acceso de las 5 salas inferiores para que no quede tapado por un muro frontal; la pared posterior queda cerrada.
+- Vista de dimensiones V9 sin dependencia de Node, accesible por Apache.
+- npm run build: PENDIENTE; el entorno de preparación no pudo instalar npm (sin red).
+- No se hicieron pruebas gráficas con navegador ni pruebas de colisiones en ejecución.
+- No son medidas oficiales de SENATI ni un simulador de evacuación certificado.

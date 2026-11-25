@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>Aula 3D | Laboratorio de informática</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">3D</span><div><strong>Aula de informática</strong><small>20 × 12 metros · Laboratorio virtual</small></div></div>
+    <div class="top-actions">
+      <span id="scene-label" class="scene-label">Vista sin techo</span>
+      <button id="toggle-roof" class="btn primary">Activar techo</button>
+      <button id="reset-camera" class="btn">Centrar cámara</button>
+      <button id="vr-fallback" class="btn" title="La opción VR aparece si el navegador detecta un visor compatible">Modo VR</button>
+    </div>
+  </header>
+  <aside class="sidebar">
+    <div class="side-head"><div><span class="eyebrow">CONTROLES DEL AULA</span><h2>Personalizar escena</h2></div><button id="collapse-panel" class="icon-btn" aria-label="Ocultar panel">‹</button></div>
+    <section class="panel-section">
+      <h3>Elementos del aula</h3>
+      <label class="switch-row"><span><b>Personas</b><small>Estudiantes sentados en los puestos</small></span><input type="checkbox" data-feature="Personas" checked><i></i></label>
+      <label class="switch-row"><span><b>Ventiladores</b><small>2 ventiladores centrales</small></span><input type="checkbox" data-feature="Ventiladores" checked><i></i></label>
+      <label class="switch-row"><span><b>Fluorescentes</b><small>4 luminarias rectangulares</small></span><input type="checkbox" data-feature="Fluorescentes" checked><i></i></label>
+      <label class="switch-row"><span><b>Proyector</b><small>Proyector y haz de luz</small></span><input type="checkbox" data-feature="Proyector" checked><i></i></label>
+    </section>
+    <section class="panel-section">
+      <h3>Visualización</h3>
+      <label class="switch-row"><span><b>Techo</b><small>Mostrar u ocultar el techo</small></span><input id="roof-switch" type="checkbox"><i></i></label>
+      <label class="switch-row"><span><b>Sombras</b><small>Sombras de mobiliario y personas</small></span><input id="shadow-switch" type="checkbox" checked><i></i></label>
+    </section>
+    <section class="panel-section">
+      <h3>Movimiento</h3>
+      <div class="key-grid"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+      <p class="muted">Moverse por el aula</p>
+      <div class="key-grid compact"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><kbd>Q</kbd><kbd>E</kbd></div>
+      <p class="muted">Girar la vista · Q/E subir y bajar</p>
+      <p class="tip">En VR: pulsa «Modo VR» con un visor compatible. Se recomienda abrir mediante HTTPS o localhost.</p>
+    </section>
+    <div class="side-foot"><span class="status-dot"></span><span id="status">Escena lista</span></div>
+  </aside>
+  <main id="viewport" aria-label="Aula 3D interactiva">
+    <div class="canvas-hint">Arrastra para orbitar · Rueda para zoom · WASD para caminar</div>
+  </main>
+</div>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {dirname} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {carveSlab,rectangleArea} from '../src/atrium-geometry.js';
+import {getFirstFloorFrontPlan} from '../src/primer-piso-frente.js';
+import {EV52_ATRIUM,EV52_ROOMS,EV52_STAIRWELLS,EV52_ELEVATORS,EV52_ELEVATOR,getPyramidDimensions,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH} from '../src/ev52-layout.js';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const src=name=>readFileSync(resolve(root,name),'utf8');
+const a=EV52_ATRIUM;
+const area=p=>(p.x1-p.x0)*(p.z1-p.z0);
+const almost=(x,y,delta=1e-6)=>assert(Math.abs(x-y)<delta,`${x} ≈ ${y}`);
+const bounds={left:-21.45,right:23.85,back:-16.53,front:16.53};
+const roofBounds={left:-26.1,right:26.5,back:-17.95,front:17.95};
+const stairHoles=EV52_STAIRWELLS.map(st=>({x0:st.xMin,x1:st.xMax,z0:st.zTop,z1:st.zBottom}));
+const liftHole={x0:EV52_ELEVATOR.xMin,x1:EV52_ELEVATOR.xMax,z0:EV52_ELEVATOR.zTop,z1:EV52_ELEVATOR.zBottom};
+assert(a.x0<a.x1&&a.z0<a.z1,'Atrio tiene un vano con superficie positiva');
+almost(a.x1-a.x0,12.8);almost(a.z1-a.z0,6.2);
+assert(EV52_ROOMS.every(r=>(r.z1<=a.z0||r.z0>=a.z1||r.x1<=a.x0||r.x0>=a.x1)), 'Tragaluz no atraviesa ninguna aula');
+assert(EV52_STAIRWELLS.every(s=>s.xMax<a.x0||s.xMin>a.x1),'Tragaluz no invade escaleras');
+assert(EV52_ELEVATOR.xMin>a.x1,'Tragaluz no invade el ascensor');
+assert(a.z0-EV52_ROOMS[0].z1>2.3,'Pasadizo superior libre > 2,3 m');
+assert(EV52_ROOMS.find(r=>r.id==='S2').z0-a.z1>1.95,'Pasadizo inferior libre > 1,95 m');
+const ground=carveSlab(bounds), upper=carveSlab(bounds,[...stairHoles,liftHole,a]),roof=carveSlab(roofBounds,[a]);
+almost(ground.reduce((acc,p)=>acc+rectangleArea(p),0),rectangleArea(bounds));
+almost(upper.reduce((acc,p)=>acc+rectangleArea(p),0),rectangleArea(bounds)-[...stairHoles,liftHole,a].reduce((acc,h)=>acc+area(h),0));
+almost(roof.reduce((acc,p)=>acc+rectangleArea(p),0),rectangleArea(roofBounds)-area(a));
+// Ningún bloque de losas superiores puede intersecarse con el vacío.
+for(const p of [...upper,...roof]){
+  assert(p.right<=a.x0+1e-7||p.left>=a.x1-1e-7||p.front<=a.z0+1e-7||p.back>=a.z1-1e-7,'Losas no cubren el tragaluz');
+}
+assert(ground.some(p=>p.left<a.x0&&p.right>a.x1&&p.back<a.z0&&p.front>a.z1),'Planta baja conserva el suelo completo del atrio');
+// Reproducción frontal del primer piso según líneas negras y puertas verdes.
+const front=getFirstFloorFrontPlan(bounds,[...EV52_STAIRWELLS,EV52_ELEVATORS]);
+assert(front.walls.length>=22,'Croquis frontal contiene divisiones interiores');
+assert.equal(front.doors.length,8,'Se reproducen las ocho aberturas verdes internas');
+assert(front.labels.some(p=>p.label==='SALÓN 1')&&front.labels.some(p=>p.label==='SALÓN 2'),'Salones identificados');
+assert(front.labels.some(p=>p.label==='BAÑO HOMBRES')&&front.labels.some(p=>p.label==='BAÑO MUJERES'),'Baños identificados');
+assert(Math.abs(front.entrance.x)<1.8,'Acceso frontal coincide aproximadamente con el portal existente');
+for(const door of front.doors){
+  assert(door.side==='x'||door.side==='z','Puerta orientada según su muro');
+  assert(door.width>.75,'Puerta practicable en maqueta');
+  for(const wall of front.walls){
+    if(wall.axis!==door.side)continue;
+    const overlap=door.side==='x'
+      ?Math.abs(wall.x0-door.x)<.03&&wall.z0<door.z+door.width/2-.03&&wall.z1>door.z-door.width/2+.03
+      :Math.abs(wall.z0-door.z)<.03&&wall.x0<door.x+door.width/2-.03&&wall.x1>door.x-door.width/2+.03;
+    assert(!overlap,door.id+': el muro no debe tapar el hueco verde');
+  }
+}
+for(const wall of front.walls)for(const core of [...EV52_STAIRWELLS,...EV52_ELEVATORS]){
+  const xMin=Math.min(wall.x0,wall.x1),xMax=Math.max(wall.x0,wall.x1);
+  const zMin=Math.min(wall.z0,wall.z1),zMax=Math.max(wall.z0,wall.z1);
+  const crossing=xMax+.04>core.xMin&&xMin-.04<core.xMax&&zMax+.04>core.zTop&&zMin-.04<core.zBottom;
+  assert(!crossing,'El plano frontal no cruza escaleras ni ascensores');
+}
+assert(src('src/piramide-senati.js').includes('f===0?firstFloorPlan.walls:wallSegments'),'Solo planta baja usa muros del croquis');
+assert(src('src/piramide-senati.js').includes('f===0?firstFloorPlan.doors:doors'),'Solo planta baja usa puertas del croquis');
+assert(src('src/recorrer.js').includes("if(door.side==='x')"),'Recorrido respeta las puertas de muros verticales');
+const code=src('src/piramide-senati.js');
+assert(code.includes('makeSlab(base,f!==0)'), 'Piso 1 cerrado; pisos superiores perforados');
+assert(code.includes('if(f>0)addAtriumRailing(base,f)'), 'Barandas en pisos 2-6');
+assert(code.includes('floorWallBoxes[f].push({x0:x-.08,x1:x+.08,z0:a,z1:b})'), 'Barandas laterales con colisión');
+assert(code.includes('floorWallBoxes[f].push({x0:a,x1:b,z0:z-.08,z1:z+.08})'), 'Barandas superior e inferior con colisión');
+assert(code.includes('addRailX(z0,x0,core.x0)')&&code.includes('addRailX(z0,core.x1,x1)'), 'Muro no atravesado por baranda superior');
+assert(code.includes('const coreWidth=(atrium.x1-atrium.x0)*.56'), 'Muro ocupa 56 % del ancho del atrio');
+assert(code.includes('const coreDepth=(atrium.z1-atrium.z0)*.07'), 'Muro sobresale 7 % hacia el atrio');
+assert(code.includes('z0:atrium.z0,z1:atrium.z0+coreDepth'), 'Muro adosado al borde superior del tragaluz');
+assert(code.includes('floorWallBoxes[f].push({...core,z0:core.z0-.115,z1:core.z1+.115})'), 'Muro con colisión');
+assert(code.includes('makeSlab(H+.15,true,roof,.45,roofBounds,concreteLight)'), 'Techo perforado en el centro');
+assert(code.includes('target===roof?[atrium]:holes'), 'Techo no perfora huecos de escaleras/ascensor');
+for(const pathname of ['VISTA_DIMENSIONES_V11.html','referencias/tragaluz_atrio_referencia.jpg','src/atrium-geometry.js','assets/ev52-layout-public.js','INSTRUCCIONES_V11.md'])assert(existsSync(resolve(root,pathname)),`Incluye ${pathname}`);
+assert.equal(src('src/ev52-layout.js'),src('assets/ev52-layout-public.js'),'Layout público y Three.js idénticos');
+assert(src('VISTA_DIMENSIONES_V11.html').includes('EV52_ATRIUM'),'Plano 2D muestra el tragaluz');
+for(const file of ['src/atrium-geometry.js','src/ev52-layout.js','src/piramide-senati.js','src/editor.js','src/recorrer.js','src/simulator.js'])execFileSync(process.execPath,['--check',resolve(root,file)]);
+const m=getPyramidDimensions(DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH);
+almost(m.atrium.width,12.8);almost(m.atrium.depth,6.2);
+console.log(`V11 OK: tragaluz ${m.atrium.width.toFixed(1)} × ${m.atrium.depth.toFixed(1)} m (maqueta), hueco en pisos 2–6 y azotea, planta baja intacta, barandas con colisión. Piezas: planta baja ${ground.length}, superior ${upper.length}, azotea ${roof.length}.`);
