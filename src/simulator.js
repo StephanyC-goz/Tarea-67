@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { createSceneModel } from './scene-models.js';
 import { buildPiramideSENATI } from './piramide-senati.js';
+import {mountGraphicsQuality} from './calidad-grafica.js';
 import {ev52DeskPositions,pyramidScale,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
 import { NavigationGrid, findExitInfo } from './navigation.js';
 
@@ -10,6 +11,7 @@ const $ = (id) => document.getElementById(id);
 const stage = $('sim-stage');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeaf0f7);
+scene.fog=new THREE.Fog(0xeaf0f7,180,365);
 const camera = new THREE.PerspectiveCamera(50, 1, .1, 500);
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -33,6 +35,8 @@ const hemi = new THREE.HemisphereLight(0xf6f9ff,0x65758a,1.7);scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff8ed,2.2);
 sun.position.set(-12,22,16);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);scene.add(sun);
 const fill = new THREE.DirectionalLight(0xb8d9ff,.75);fill.position.set(12,10,-12);scene.add(fill);
+const graphicsQuality=mountGraphicsQuality({container:document.querySelector('.side'),
+  renderer,sun,scene,shadowRadius:56});
 
 const roomGroup = new THREE.Group();
 const furniture = new THREE.Group();
@@ -53,6 +57,7 @@ function applyClimate(mode){
  appearance.climate=mode||'day';
  const night=appearance.climate==='night',rain=appearance.climate==='rain';
  scene.background=new THREE.Color(night?0x101a30:(rain?0x8998aa:0xeaf0f7));
+ if(scene.fog)scene.fog.color.copy(scene.background);
  hemi.intensity=night?.42:(rain?.95:1.7);
  sun.intensity=night?.12:(rain?.72:2.2);
  fill.intensity=night?.22:(rain?.42:.75);
