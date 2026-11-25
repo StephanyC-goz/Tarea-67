@@ -18,7 +18,7 @@ try{
  document.getElementById('overview').onclick=overview;document.getElementById('plan').onclick=()=>view([0,155,.01,0,0,0]);
  document.getElementById('entrance').onclick=()=>{
    const {x,z,approach}=building.entry;
-   view([approach.x-7,2.8,z+.8,x,2.0,z+2.7]);
+   view([approach.x-13,1.72,z+3.2,x,9.0,z+3.2]);
    document.getElementById('caption').textContent='Entrada principal de vidrio en la plaza lateral, entre las zonas de seguridad.';
  };
  const route=new THREE.Group();route.visible=false;scene.add(route);const points=building.campus.route.map(p=>new THREE.Vector3(p.x,building.campus.heightAt(p.x,p.z)+.15,p.z));

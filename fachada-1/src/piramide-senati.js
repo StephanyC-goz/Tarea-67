@@ -54,26 +54,13 @@ function drawSenatiMark(ctx, x, y, size) {
 }
 
 function concreteGrain() {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#f0efec';
-  ctx.fillRect(0,0,256,256);
-  let seed = 812;
-  const next = () => {
-    seed = (Math.imul(seed,1664525)+1013904223)>>>0;
-    return seed/4294967296;
-  };
-  for (let grain=0;grain<8400;grain++) {
-    ctx.fillStyle = grain%3===0?'#ffffff60':'#60564c23';
-    ctx.fillRect(next()*256,next()*256,1+next()*2,1+next()*2);
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(3,3);
-  texture.anisotropy=8;
-  return texture;
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#c8c0b6';ctx.fillRect(0,0,512,512);
+  let seed=812;const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  for(let i=0;i<17000;i++){ctx.fillStyle=i%3===0?'rgba(255,248,232,.18)':'rgba(49,39,32,.16)';ctx.fillRect(rand()*512,rand()*512,.6+rand()*2.4,.6+rand()*2.4);}
+  for(let i=0;i<1100;i++){ctx.fillStyle=i%2?'rgba(38,30,25,.12)':'rgba(255,246,230,.10)';ctx.fillRect(rand()*512,rand()*512,2+rand()*6,1+rand()*3);}
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(2,2);texture.anisotropy=8;return texture;
 }
 
 function signPanel(parent, {width, height, x, y, z, rotation=0, color, lines=[]}) {
@@ -124,11 +111,12 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const concrete = standard(facadeColor,.91);
   const spandrel = standard(new THREE.Color(facadeColor).lerp(new THREE.Color('#d5d0c7'),.30),.87);
   concrete.map = spandrel.map = concreteGrain();
+  concrete.bumpMap=spandrel.bumpMap=concrete.map;concrete.bumpScale=.065;spandrel.bumpScale=.045;
   const shadow = standard('#242c2e',.94);
   const trim = standard('#a8aba9',.56,.25);
   const aluminum = standard('#d4d9da',.40,.38);
   const white = standard('#e5e7e7',.74);
-  const blue = standard(signColor,.65);
+  const blue = standard(new THREE.Color(signColor).multiplyScalar(.72),.76);
   const darkBlue = standard(new THREE.Color(signColor).multiplyScalar(.64),.70);
   const windowTones = ['#2d434d','#455860','#5b727b','#27333a'].map(color=>standard(color,.29,.13));
   const entryGlass = new THREE.MeshPhysicalMaterial({color:'#90aeb9',roughness:.18,metalness:.04,transparent:true,opacity:.49,depthWrite:false,side:THREE.DoubleSide});
@@ -140,7 +128,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const outerFace = (side,y) => (side>0?front:back) + side*Z(.14+1.15*(1-y/height));
   // Perfil trapezoidal del cuerpo superior: conservar el acceso y el zócalo,
   // y mantener la envolvente por fuera de las losas interiores existentes.
-  const taperStart=levelHeight*.8, taperPeak=levelHeight;
+  const taperStart=0, taperPeak=Math.min(.85,levelHeight*.25);
   const taperOffset=y=>height>taperPeak ? Z(3.4)*Math.max(0,Math.min((y-taperStart)/(taperPeak-taperStart),(height-y)/(height-taperPeak))) : 0;
   const taperProfile=(profile,sideFor)=>{
     const points=[];
@@ -330,49 +318,54 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     y:groundWallHeight*.60,z:blueStart+directoryWidth*.54,rotation:-Math.PI/2,
     lines:['› Escuela de Tecnologías','  de la Información','› Escuela de Confecciones','› Centro de Tecnologías']});
 
-  // Cerrar únicamente la junta sobre el portal; el vano de acceso queda libre.
-  if(height>glassTop) box(envelope,.18,height-glassTop,westSpan+.10,entryX+.21,(height+glassTop)/2,westCenter,concrete);
-  const recessDepth = entryX-westX;
-  const balcony = new THREE.Group();
-  balcony.name = 'Vuelos, barandas y paños azules del lateral';
-  envelope.add(balcony);
-  const ledgeY = [canopyY,levelHeight*3.52,levelHeight*4.48];
-  for (const y of ledgeY) {
-    if (y>=height-.55) continue;
-    box(balcony,recessDepth+.75,.63,westSpan,westX+(recessDepth-.75)/2,y,westCenter,concrete);
-    box(balcony,recessDepth+.68,.10,westSpan,westX+(recessDepth-.68)/2,y-.36,westCenter,white);
-    box(balcony,.31,.55,westSpan,westX-.57,y+.49,westCenter,concrete);
-    const railingX = westX-.58;
-    for (const railY of [y+.84,y+1.05]) beam(balcony,[railingX,railY,recessStart+.12],[railingX,railY,recessEnd-.12],.024,aluminum);
-    for (let post=0;post<=8;post++) {
-      const z = recessStart+.12+(westSpan-.24)*post/8;
-      beam(balcony,[railingX,y+.75,z],[railingX,y+1.08,z],.027,aluminum);
+
+  // Reconstrucción del acceso a partir de la fotografía: proporciones aproximadas.
+  {
+  const entryConcrete=standard('#82776a',.96);
+  entryConcrete.map=concrete.map;entryConcrete.bumpMap=concrete.map;entryConcrete.bumpScale=.055;
+  const panelBlue=standard('#163b93',.76),panelBlack=standard('#111d29',.98);
+  const metalWhite=standard('#c8cbd0',.58,.22),glassDark=standard('#30434b',.28,.18),glassLight=standard('#a1afb2',.39,.15);
+  const balcony=new THREE.Group();balcony.name='Acceso SENATI · balcones, ventanas y voladizo';envelope.add(balcony);
+  const recessDepth=entryX-westX;
+  if(height>glassTop)box(balcony,.22,height-glassTop,westSpan+.12,entryX+.23,(height+glassTop)/2,westCenter,entryConcrete);
+  const deck=(y,projection,thickness)=>{
+    box(balcony,recessDepth+projection,thickness,westSpan+.10,westX+(recessDepth-projection)/2,y,westCenter,entryConcrete);
+    box(balcony,.13,.12,westSpan+.10,westX-projection-.015,y-thickness/2+.06,westCenter,metalWhite);
+  };
+  deck(canopyY,.52,.72);
+  const railX=westX-.50;
+  for(const yy of [canopyY+.65,canopyY+.91])beam(balcony,[railX,yy,recessStart+.15],[railX,yy,recessEnd-.15],.027,aluminum);
+  for(let j=0;j<=11;j++){const zz=recessStart+.15+(westSpan-.30)*j/11;beam(balcony,[railX,canopyY+.36,zz],[railX,canopyY+.94,zz],.026,aluminum);}
+  const panelBottom=canopyY+.39,panelTop=height*.56;
+  if(panelTop>panelBottom){const slit=Math.min(.82,westSpan*.08),panelWidth=(westSpan-slit)/2;
+    for(const side of [-1,1])box(balcony,.22,panelTop-panelBottom,panelWidth-.015,entryX-.27,(panelTop+panelBottom)/2,westCenter+side*(panelWidth+slit)/2,panelBlue);
+    box(balcony,.12,panelTop-panelBottom,slit,entryX-.19,(panelTop+panelBottom)/2,westCenter,panelBlack);}
+  for(const [fraction,projection] of [[.565,.18],[.685,.09]]){const yy=height*fraction;if(yy>canopyY+.6)deck(yy,projection,.44);}
+  for(const [fraction,tone] of [[.655,glassLight],[.765,glassDark]]){
+    const yy=height*fraction,wh=Math.min(1.24,levelHeight*.34),span=westSpan-.30,n=12,bay=span/n;
+    box(balcony,.10,wh+.11,span,entryX-.23,yy,westCenter,panelBlack);
+    for(let j=0;j<n;j++){const zz=westCenter-span/2+(j+.5)*bay;
+      box(balcony,.045,wh-.07,bay-.038,entryX-.30,yy,zz,j%4===0?glassDark:tone,false);
+      box(balcony,.075,wh,.042,entryX-.34,yy,zz+bay/2,aluminum,false);}
+    for(const edge of [-1,1])box(balcony,.075,.048,span,entryX-.34,yy+edge*wh/2,westCenter,aluminum,false);
+  }
+  const cantileverHeight=height*.155,cantileverY=height-cantileverHeight/2+.06;
+  const overhang=2.05,cantileverWidth=westSpan*.90;
+  const cladding=box(envelope,recessDepth+overhang,cantileverHeight,cantileverWidth,westX+(recessDepth-overhang)/2,cantileverY,westCenter,metalWhite);
+  cladding.name='Voladizo superior blanco de paneles verticales';
+  for(let j=1;j<17;j++)box(envelope,.022,cantileverHeight-.025,.026,westX-overhang-.013,cantileverY,westCenter-cantileverWidth/2+cantileverWidth*j/17,trim,false);
+  const pillarWidth=Math.min(westSpan*.16,2.4),pillarZ=recessEnd+pillarWidth*.42,pillarH=height*1.10;
+  box(envelope,.72,pillarH,pillarWidth,westX-.33,pillarH/2,pillarZ,entryConcrete).name='Machón vertical de concreto';
+  const seamMat=standard('#756e63',.99);
+  for(let yy=levelHeight*.52;yy<height-.20;yy+=levelHeight*.52){
+    for(const side of [-1,1]){
+      const inner=side<0?recessStart:recessEnd;
+      const topY=height+(side<0?.21:.78);
+      const outer=outerFace(side,0)+(outerFace(side,height)-outerFace(side,0))*yy/topY+side*taperOffset(yy);
+      const length=Math.abs(outer-inner)-.18;if(length>.10)box(envelope,.011,.018,length,westX-.009,yy,(outer+inner)/2,seamMat,false);
     }
   }
-  const upperPanelBottom = canopyY+.35;
-  const upperPanelTop = Math.min(height-.55,levelHeight*3.52-.33);
-  if (upperPanelTop>upperPanelBottom) {
-    const middleGap = Math.min(.70,westSpan*.064);
-    const panelWidth = (westSpan-middleGap)/2;
-    for (const side of [-1,1]) box(balcony,.30,upperPanelTop-upperPanelBottom,panelWidth,entryX-.22,
-      (upperPanelTop+upperPanelBottom)/2,westCenter+side*(middleGap+panelWidth)/2,blue);
-    box(balcony,.09,upperPanelTop-upperPanelBottom,middleGap,entryX+.03,(upperPanelTop+upperPanelBottom)/2,westCenter,shadow);
   }
-  box(balcony,.24,height-upperPanelTop,westSpan,entryX+.06,(height+upperPanelTop)/2,westCenter,concrete);
-  for (const y of [levelHeight*4.02,levelHeight*4.94]) {
-    if (y>=height-.65) continue;
-    const count = 10;
-    const paneWidth = westSpan/count;
-    for (let i=0;i<count;i++) {
-      const z = recessStart+(i+.5)*paneWidth;
-      box(balcony,.085,.82,paneWidth-.032,entryX-.25,y,z,windowTones[i%windowTones.length],false);
-      box(balcony,.12,.86,.035,entryX-.29,y,z+paneWidth/2,aluminum,false);
-    }
-  }
-  const cantileverHeight = Math.min(2.8,levelHeight*.77);
-  const cantileverY = height-cantileverHeight/2+.12;
-  box(envelope,recessDepth+1.64,cantileverHeight,westSpan-.11,westX+(recessDepth-1.64)/2,cantileverY,westCenter,white);
-  for (let seam=1;seam<13;seam++) box(envelope,.018,cantileverHeight-.07,.022,westX-1.65,cantileverY,recessStart+westSpan*seam/13,trim,false);
 
   // El extremo opuesto conserva el remate azul vertical y las ventanas estrechas.
   sideVolume(envelope,'Testero trapezoidal de concreto',mainRight+.11-.215,mainRight+.11+.215,

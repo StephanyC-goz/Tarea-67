@@ -125,6 +125,39 @@ function createCampusGrass(parent){
   return addPatch;
 }
 
+
+/** Corteza procedural y copas compuestas por hojas de geometría real. */
+function createNaturalTreeAssets(){
+  const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#73624d';ctx.fillRect(0,0,128,256);
+  let seed=314159;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  for(let i=0;i<460;i++){ctx.fillStyle=i%3===0?'rgba(192,168,132,.23)':'rgba(36,29,23,.28)';ctx.fillRect(random()*128,random()*256,.7+random()*3,6+random()*48);}
+  const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.RepeatWrapping;map.repeat.set(1,2);map.anisotropy=8;
+  const bark=new THREE.MeshStandardMaterial({map,roughness:.97,bumpMap:map,bumpScale:.065});
+  const leafMaterial=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,side:THREE.DoubleSide,roughness:.78});
+  const colors=['#24452b','#355b2c','#477239','#557e3b','#648a43','#2b512d'].map(c=>new THREE.Color(c)),flowerColor=new THREE.Color('#a84a38');
+  function makeCrown(group,h,worldX,worldZ,flower){
+    let seed=(Math.imul(Math.round(worldX*100),73856093)^Math.imul(Math.round(worldZ*100),19349663)^314159)>>>0;
+    const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+    const pos=[],col=[],ids=[];
+    function addLeaf(x,y,z,angle,length,width,color){
+      const vx=Math.cos(angle),vz=Math.sin(angle),wx=-vz,wz=vx,base=pos.length/3;
+      const points=[[x,y,z],[x+vx*length*.47+wx*width,y+length*.13,z+vz*length*.47+wz*width],[x+vx*length*.47,y+length*.20,z+vz*length*.47],[x+vx*length*.47-wx*width,y+length*.10,z+vz*length*.47-wz*width],[x+vx*length,y+(rand()-.5)*length*.75,z+vz*length]];
+      for(let j=0;j<5;j++){pos.push(...points[j]);const f=j===2?1.08:j===0?.72:.93;col.push(color.r*f,color.g*f,color.b*f);}
+      ids.push(base,base+1,base+2,base,base+2,base+3,base+1,base+4,base+2,base+2,base+4,base+3);
+    }
+    const scale=h/4.1;
+    for(let j=0;j<11;j++){const angle=j*2.399963,reach=(.70+rand()*.65)*scale,cy=h*(.75+rand()*.23),cx=Math.cos(angle)*reach,cz=Math.sin(angle)*reach,radius=(.52+rand()*.32)*scale;
+      for(let k=0;k<260;k++){const a=rand()*Math.PI*2,r=Math.sqrt(rand())*radius,yy=cy+(rand()-.5)*radius*.72+Math.sqrt(Math.max(0,1-r*r/(radius*radius)))*radius*.23;
+        const c=flower&&rand()<.025?flowerColor:colors[Math.floor(rand()*colors.length)];
+        addLeaf(cx+Math.cos(a)*r,yy,cz+Math.sin(a)*r,rand()*Math.PI*2,(.13+rand()*.18)*scale,(.028+rand()*.045)*scale,c);}
+    }
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.setIndex(ids);geo.computeVertexNormals();geo.computeBoundingSphere();
+    const leaves=new THREE.Mesh(geo,leafMaterial);leaves.name='Copa natural · hojas individuales';leaves.castShadow=true;leaves.receiveShadow=true;group.add(leaves);
+  }
+  return {bark,makeCrown};
+}
+
 export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb',entrance,buildingObstacles=[]}={}){
   const root=new THREE.Group();root.name='Exterior · recorrido del video 1–7';parent.add(root);
   // Escalar coordenadas de implantación sin deformar mobiliario ni personas.
@@ -158,6 +191,7 @@ export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb
   const textures={brick:texture('brick'),concrete:texture('concrete'),grass:texture('grass'),tile:texture('tile')};
   const surfaceMaterials=new Map();
   const addGrassPatch=createCampusGrass(root);
+  const naturalTrees=createNaturalTreeAssets();
   function surface(name,x,z,w,d,y=0,kind='concrete'){
     x=X(x);z=Z(z);w=X(w);d=Z(d);
     const key=`${kind}:${w}:${d}`;
@@ -230,10 +264,21 @@ export function buildCampusExterior(parent,{width=56,depth=38,signColor='#1251cb
   function tree(x,z,y=0,palm=false,flower=false,height=palm?6.3:4.1){
     x=X(x);z=Z(z);const g=group(palm?'Palmera de tronco blanqueado':'Árbol de tronco blanqueado',x,y,z);
     const h=height, scale=palm?h/6.3:1;
-    beam(g,[0,0,0],[.13*scale,h,0],palm?.21*scale:.15,M.trunk);
-    beam(g,[0,0,0],[.025*scale,1.1*scale,0],palm?.22*scale:.16,M.white);
-    if(palm){for(let i=0;i<9;i++){let a=i*Math.PI*2/9;const leaf=new THREE.Mesh(leafGeo,M.leaf);leaf.scale.set(.46*scale,.18*scale,2.1*scale);leaf.position.set(Math.sin(a)*1.2*scale,h-.25*scale,Math.cos(a)*1.2*scale);leaf.rotation.set(-.25,a,0);g.add(leaf);}}
-    else{for(let i=0;i<5;i++){let a=i*2.4;beam(g,[.06,2.1,0],[Math.cos(a),h-.5,Math.sin(a)],.055,M.trunk);const o=new THREE.Mesh(leafGeo,i%2?M.foliage:M.leaf);o.scale.set(1.45,.9,1.35);o.position.set(Math.cos(a)*.65,h-.2+(i%2)*.35,Math.sin(a)*.65);o.castShadow=true;g.add(o);if(flower){const flowers=new THREE.Mesh(leafGeo,mat('#bc684c'));flowers.scale.set(.9,.18,.7);flowers.position.copy(o.position).add(new THREE.Vector3(0,.8,0));g.add(flowers);}}}
+    if(palm){
+      beam(g,[0,0,0],[.13*scale,h,0],.21*scale,naturalTrees.bark);
+for(let i=0;i<9;i++){let a=i*Math.PI*2/9;const leaf=new THREE.Mesh(leafGeo,M.leaf);leaf.scale.set(.46*scale,.18*scale,2.1*scale);leaf.position.set(Math.sin(a)*1.2*scale,h-.25*scale,Math.cos(a)*1.2*scale);leaf.rotation.set(-.25,a,0);g.add(leaf);}
+    } else {
+  const branchScale=h/4.1;
+  beam(g,[0,0,0],[.10*branchScale,h*.73,.035*branchScale],.16*branchScale,naturalTrees.bark);
+  for(let j=0;j<11;j++){
+    const angle=j*2.399963,reach=(.78+(j%4)*.17)*branchScale,yy=h*(.76+(j%4)*.063);
+    const mid=[Math.cos(angle)*reach*.38,h*.56,Math.sin(angle)*reach*.38],tip=[Math.cos(angle)*reach,yy,Math.sin(angle)*reach];
+    beam(g,[.07*branchScale,h*.34,0],mid,.078*branchScale,naturalTrees.bark);
+    beam(g,mid,tip,.037*branchScale,naturalTrees.bark);
+    for(const side of [-1,1])beam(g,mid,[tip[0]+Math.cos(angle+side*.95)*.38*branchScale,tip[1]-.10*branchScale,tip[2]+Math.sin(angle+side*.95)*.38*branchScale],.021*branchScale,naturalTrees.bark);
+  }
+  naturalTrees.makeCrown(g,h,x,z,flower);
+}
     collisions.push({x0:x-.25,x1:x+.25,z0:z-.25,z1:z+.25});return g;
   }
   function planter(x,z,w,d,y=0,hedge=false){
