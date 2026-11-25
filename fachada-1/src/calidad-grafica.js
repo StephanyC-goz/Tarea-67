@@ -8,8 +8,8 @@ import * as THREE from 'three';
 export const QUALITY_PRESETS=Object.freeze({
   rendimiento:Object.freeze({label:'Rendimiento',dpr:1,shadow:768,enabled:false,exposure:1.13}),
   equilibrado:Object.freeze({label:'Equilibrado',dpr:1.35,shadow:1536,enabled:true,exposure:1.15}),
-  alto:Object.freeze({label:'Alto · recomendado',dpr:1.8,shadow:2048,enabled:true,exposure:1.19}),
-  ultra:Object.freeze({label:'Ultra · GPU potente',dpr:2,shadow:3072,enabled:true,exposure:1.2})
+  alto:Object.freeze({label:'Alto · recomendado',dpr:2,shadow:3072,enabled:true,exposure:1.19}),
+  ultra:Object.freeze({label:'Ultra · GPU potente',dpr:2.5,shadow:4096,enabled:true,exposure:1.2})
 });
 const KEY='senati3d.calidad-grafica';
 export function recommendedQuality({mobile=false}={}){

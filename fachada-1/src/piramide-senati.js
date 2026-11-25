@@ -55,23 +55,24 @@ function drawSenatiMark(ctx, x, y, size) {
 
 function concreteGrain() {
   const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 128;
+  canvas.width = canvas.height = 256;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#f0efec';
-  ctx.fillRect(0,0,128,128);
+  ctx.fillRect(0,0,256,256);
   let seed = 812;
   const next = () => {
     seed = (Math.imul(seed,1664525)+1013904223)>>>0;
     return seed/4294967296;
   };
-  for (let grain=0;grain<2100;grain++) {
+  for (let grain=0;grain<8400;grain++) {
     ctx.fillStyle = grain%3===0?'#ffffff60':'#60564c23';
-    ctx.fillRect(next()*128,next()*128,1+next()*2,1+next()*2);
+    ctx.fillRect(next()*256,next()*256,1+next()*2,1+next()*2);
   }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(3,3);
+  texture.anisotropy=8;
   return texture;
 }
 
@@ -222,6 +223,13 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
       for (let line=0;line<4;line++) box(wallSide,.19,.018,.026,x+.22,y-.12+.08*line,z+side*.184,trim,false);
     }
     taperWall(wallSide,side);
+    // Cerramiento continuo detrás de los ventanales: las juntas ya no dan al vacío.
+    const seamHeights=[...new Set([0,taperStart,taperPeak,height])].filter(y=>y>=0&&y<=height).sort((a,b)=>a-b);
+    const seamFace=y=>outerFace(side,y)+side*taperOffset(y);
+    const seamProfile=[...seamHeights.map(y=>[seamFace(y)-side*.40,y]),
+      ...seamHeights.slice().reverse().map(y=>[seamFace(y)-side*.57,y])];
+    sideVolume(envelope,'Cerramiento continuo de fachada',mainLeft-.08,mainRight+.08,seamProfile,concrete);
+
     const roofZ = outerFace(side,height)+side*.13;
     const signWidth = facadeWidth*.97;
     const signHeight = Math.min(4.25,levelHeight*1.1);
@@ -322,6 +330,8 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     y:groundWallHeight*.60,z:blueStart+directoryWidth*.54,rotation:-Math.PI/2,
     lines:['› Escuela de Tecnologías','  de la Información','› Escuela de Confecciones','› Centro de Tecnologías']});
 
+  // Cerrar únicamente la junta sobre el portal; el vano de acceso queda libre.
+  if(height>glassTop) box(envelope,.18,height-glassTop,westSpan+.10,entryX+.21,(height+glassTop)/2,westCenter,concrete);
   const recessDepth = entryX-westX;
   const balcony = new THREE.Group();
   balcony.name = 'Vuelos, barandas y paños azules del lateral';
@@ -366,7 +376,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
 
   // El extremo opuesto conserva el remate azul vertical y las ventanas estrechas.
   sideVolume(envelope,'Testero trapezoidal de concreto',mainRight+.11-.215,mainRight+.11+.215,
-    taperProfile([[back,0],[front,0],[front,height],[back,height]],([z])=>z<(front+back)/2?-1:1),concrete);
+    taperProfile([[outerFace(-1,0)-.12,0],[outerFace(1,0)+.12,0],[outerFace(1,height)+.12,height],[outerFace(-1,height)-.12,height]],([z])=>z<(front+back)/2?-1:1),concrete);
   sideVolume(envelope,'Remate azul inclinado',mainRight+.67-.605,mainRight+.67+.605,
     taperProfile([[front-1.20-1.325,0],[front-1.20+1.325,0],[front-1.20+1.325,height],[front-1.20-1.325,height]],()=>1),darkBlue);
   for (let floor=1;floor<levels;floor++) {
@@ -375,7 +385,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     box(shell,.28,.23,2.64,mainRight+1.26,y+.59,front-1.20+taperOffset(y+.59),white);
   }
   const roofLeft=westX-.13, roofRight=mainRight+1.35;
-  box(roof,roofRight-roofLeft,.45,front-back+.35,(roofLeft+roofRight)/2,height+.15,(front+back)/2,spandrel);
+  box(roof,roofRight-roofLeft,.45,outerFace(1,height)-outerFace(-1,height)+.40,(roofLeft+roofRight)/2,height+.15,(front+back)/2,spandrel);
 
   return {
     entry:{side:'left',x:entryX,z:doorZ,halfWidth,frontZ:front,approach:{x:westX-X(6.6),z:doorZ,yaw:-Math.PI/2}},
