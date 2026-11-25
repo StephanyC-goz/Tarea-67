@@ -35,3 +35,11 @@
 @media(max-width:1000px) and (min-width:761px){.content{grid-template-columns:275px minmax(0,1fr)}.walk-sidebar{padding:16px}.app-nav{flex-wrap:wrap}}
 @media(max-width:760px){.walk-sidebar{max-height:35svh}.viewer-top{left:8px;right:8px;top:8px;flex-wrap:wrap}.viewer-bottom{left:8px;right:8px;bottom:8px;flex-wrap:wrap;justify-content:center}}
 @media(prefers-reduced-motion:reduce){.walk-sidebar button,.nav-buttons a,.nav-buttons button{transition:none}.walk-sidebar button:not(:disabled):hover,.nav-buttons a:hover,.nav-buttons button:hover{transform:none}}
+
+
+/* Calidad gráfica 3D: opciones independientes del movimiento y de MySQL. */
+.graphics-quality-control{display:flex;flex-direction:column;gap:7px;margin-top:16px;padding:13px;border:1px solid #cddff1;border-radius:12px;background:linear-gradient(140deg,#fff,#e7f2ff)}
+.graphics-quality-title{color:#1a4f8e;font-weight:850;font-size:13px}
+.graphics-quality-control select{appearance:auto;width:100%;min-height:43px;padding:10px 12px;border:1px solid #b5cfee;border-radius:9px;background:#fff;color:#183e6f;font-weight:750}
+.graphics-quality-control select:focus-visible{outline:3px solid #80cbff;outline-offset:2px}
+.graphics-quality-caption{display:block;color:#587798;font-size:11px;line-height:1.45}
