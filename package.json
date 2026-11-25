@@ -6,9 +6,10 @@
   "scripts": {
     "build": "vite build",
     "watch": "vite build --watch",
-    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v12.mjs && node scripts/verificar-nucleos.mjs && node scripts/verificar-unificado.mjs",
+    "check": "node scripts/verificar-proyecto.cjs && node scripts/verificar-v12.mjs && node scripts/verificar-nucleos.mjs && node scripts/verificar-graficos.mjs && node scripts/verificar-unificado.mjs",
     "check:unificado": "node scripts/verificar-unificado.mjs",
-    "check:nucleos": "node scripts/verificar-nucleos.mjs"
+    "check:nucleos": "node scripts/verificar-nucleos.mjs",
+    "check:graficos": "node scripts/verificar-graficos.mjs"
   },
   "dependencies": {
     "three": "0.180.0"
