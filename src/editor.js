@@ -354,6 +354,7 @@ function applyClimate(mode){
  appearance.climate=mode||'day';
  const night=appearance.climate==='night',rain=appearance.climate==='rain';
  scene.background=new THREE.Color(night?0x101a30:(rain?0x8998aa:0xb9d8f3));
+ if(scene.fog)scene.fog.color.copy(scene.background);
  hemi.intensity=night?.42:(rain?.95:1.65);
  sun.intensity=night?.12:(rain?.72:2.25);
  fill.intensity=night?.22:(rain?.42:.8);
