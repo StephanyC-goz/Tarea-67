@@ -96,8 +96,11 @@ export function mountGraphicsQuality({container,renderer,sun,scene,shadowRadius=
 }
 
 /** Dibujo procedural de baldosas sin recursos externos, compartido por las losas. */
+let sharedFloorMap=null;
 export function createPolishedFloorTexture(){
   if(typeof document==='undefined')return null;
+  // Reusar un solo mapa GPU al recrear escenas, evita duplicar texturas por planta.
+  if(sharedFloorMap)return sharedFloorMap;
   const canvas=document.createElement('canvas');
   canvas.width=canvas.height=256;
   const ctx=canvas.getContext('2d');
@@ -120,5 +123,6 @@ export function createPolishedFloorTexture(){
   map.wrapS=map.wrapT=THREE.RepeatWrapping;
   map.repeat.set(5,5);
   map.anisotropy=8;
-  return map;
+  sharedFloorMap=map;
+  return sharedFloorMap;
 }
