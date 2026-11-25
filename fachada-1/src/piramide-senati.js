@@ -137,6 +137,39 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   // Los ventanales de ambos lados largos se apoyan en franjas de concreto.
   // La envolvente retrocede en altura y los apoyos siguen esa inclinación.
   const outerFace = (side,y) => (side>0?front:back) + side*Z(.14+1.15*(1-y/height));
+  // Perfil trapezoidal del cuerpo superior: conservar el acceso y el zócalo,
+  // y mantener la envolvente por fuera de las losas interiores existentes.
+  const taperStart=levelHeight*.8, taperPeak=levelHeight;
+  const taperOffset=y=>height>taperPeak ? Z(3.4)*Math.max(0,Math.min((y-taperStart)/(taperPeak-taperStart),(height-y)/(height-taperPeak))) : 0;
+  const taperProfile=(profile,sideFor)=>{
+    const points=[];
+    for(let index=0;index<profile.length;index++){
+      const a=profile[index],b=profile[(index+1)%profile.length];
+      const sa=sideFor(a),sb=sideFor(b);
+      points.push([a[0]+sa*taperOffset(a[1]),a[1]]);
+      const cuts=[...new Set([taperStart,taperPeak,height])].filter(y=>y>Math.min(a[1],b[1])&&y<Math.max(a[1],b[1])).sort((x,y)=>a[1]<b[1]?x-y:y-x);
+      for(const y of cuts){
+        const k=(y-a[1])/(b[1]-a[1]);
+        points.push([a[0]+(b[0]-a[0])*k+(sa+(sb-sa)*k)*taperOffset(y),y]);
+      }
+    }
+    return points;
+  };
+  const taperWall=(group,side)=>{
+    for(const mesh of group.children){
+      if(!mesh.isMesh)continue;
+      if(mesh.rotation.x||mesh.rotation.y||mesh.rotation.z){mesh.position.z+=side*taperOffset(mesh.position.y);continue;}
+      const geometry=mesh.geometry,position=geometry.attributes.position;
+      for(let index=0;index<position.count;index++){
+        position.setZ(index,position.getZ(index)+side*taperOffset(mesh.position.y+position.getY(index)));
+      }
+      position.needsUpdate=true;
+      geometry.computeVertexNormals();
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
+    }
+  };
+
   box(envelope,facadeWidth,.48,depth-2.4,centerX,-.15,0,spandrel);
   for (const side of [1,-1]) {
     const wallSide = new THREE.Group();
@@ -173,7 +206,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
       const bottom = [bottomZ-.48,bottomZ+.48];
       const top = [topZ-.25,topZ+.25];
       sideVolume(structure,'Contrafuerte de concreto inclinado',x-X(.38),x+X(.38),
-        [[bottom[0],0],[bottom[1],0],[top[1],height+.10],[top[0],height+.10]],concrete);
+        taperProfile([[bottom[0],0],[bottom[1],0],[top[1],height+.10],[top[0],height+.10]],()=>side),concrete);
     }
     // Condensadoras visibles en el recorrido, colocadas en los tramos de ventanas.
     for (const [bay,floor] of [[1,1],[4,2],[8,1],[12,3]]) {
@@ -188,6 +221,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
       wallSide.add(grille);
       for (let line=0;line<4;line++) box(wallSide,.19,.018,.026,x+.22,y-.12+.08*line,z+side*.184,trim,false);
     }
+    taperWall(wallSide,side);
     const roofZ = outerFace(side,height)+side*.13;
     const signWidth = facadeWidth*.97;
     const signHeight = Math.min(4.25,levelHeight*1.1);
@@ -221,8 +255,8 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const wallBack = outerFace(-1,0),wallFront = outerFace(1,0);
   const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[outerFace(-1,height),height+.21]];
   const frontWing = [[recessEnd,0],[wallFront,0],[outerFace(1,height),height+.78],[recessEnd,height+.78]];
-  sideVolume(envelope,'Muro lateral de concreto junto a la entrada',westX,entryX+.10,rearWing,concrete);
-  sideVolume(envelope,'Volumen inclinado a la derecha de la entrada',westX,entryX+.10,frontWing,concrete);
+  sideVolume(envelope,'Muro lateral de concreto junto a la entrada',westX,entryX+.10,taperProfile(rearWing,([z])=>z<recessStart?-1:0),concrete);
+  sideVolume(envelope,'Volumen inclinado a la derecha de la entrada',westX,entryX+.10,taperProfile(frontWing,([z])=>z>recessEnd?1:0),concrete);
   obstacles.push({x0:westX,x1:entryX,z0:wallBack,z1:recessStart},{x0:westX,x1:entryX,z0:recessEnd,z1:wallFront});
 
   const fascia = new THREE.Group();
@@ -331,12 +365,14 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   for (let seam=1;seam<13;seam++) box(envelope,.018,cantileverHeight-.07,.022,westX-1.65,cantileverY,recessStart+westSpan*seam/13,trim,false);
 
   // El extremo opuesto conserva el remate azul vertical y las ventanas estrechas.
-  box(envelope,.43,height,front-back,mainRight+.11,height/2,(front+back)/2,concrete);
-  box(envelope,1.21,height,2.65,mainRight+.67,height/2,front-1.20,darkBlue);
+  sideVolume(envelope,'Testero trapezoidal de concreto',mainRight+.11-.215,mainRight+.11+.215,
+    taperProfile([[back,0],[front,0],[front,height],[back,height]],([z])=>z<(front+back)/2?-1:1),concrete);
+  sideVolume(envelope,'Remate azul inclinado',mainRight+.67-.605,mainRight+.67+.605,
+    taperProfile([[front-1.20-1.325,0],[front-1.20+1.325,0],[front-1.20+1.325,height],[front-1.20-1.325,height]],()=>1),darkBlue);
   for (let floor=1;floor<levels;floor++) {
     const y = levelHeight*(floor+.39);
-    box(shell,.096,.83,2.2,mainRight+1.3,y,front-1.20,windowTones[floor%4],false);
-    box(shell,.28,.23,2.64,mainRight+1.26,y+.59,front-1.20,white);
+    box(shell,.096,.83,2.2,mainRight+1.3,y,front-1.20+taperOffset(y),windowTones[floor%4],false);
+    box(shell,.28,.23,2.64,mainRight+1.26,y+.59,front-1.20+taperOffset(y+.59),white);
   }
   const roofLeft=westX-.13, roofRight=mainRight+1.35;
   box(roof,roofRight-roofLeft,.45,front-back+.35,(roofLeft+roofRight)/2,height+.15,(front+back)/2,spandrel);
