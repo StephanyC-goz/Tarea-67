@@ -26,8 +26,9 @@ const sun=new THREE.DirectionalLight(0xfff9e8,1.45);sun.position.set(15,28,20);s
 // Relleno celeste suave: interiores más legibles sin sombras adicionales.
 const skyFill=new THREE.DirectionalLight(0xb3d9ff,.55);
 skyFill.position.set(-24,18,-18);world.add(skyFill);
-mountGraphicsQuality({container:document.querySelector('.walk-sidebar .settings'),
+const graphicsQuality=mountGraphicsQuality({container:document.querySelector('.walk-sidebar .settings'),
   renderer,sun,scene:world,shadowRadius:55});
+let frameSamples=0,lastFpsSample=0;
 let sceneRoot=new THREE.Group();world.add(sceneRoot);
 let remoteGroup=new THREE.Group();remoteGroup.name='Jugadores conectados';sceneRoot.add(remoteGroup);
 let furniture=new THREE.Group();sceneRoot.add(furniture);
@@ -583,6 +584,16 @@ function tick(){
   }
   animateRemotePlayers();
   renderer.render(world,camera);
+  // Lectura FPS real cada 1.2 s, sin calculos intensivos por fotograma.
+  frameSamples++;
+  const now=performance.now();
+  if(!lastFpsSample)lastFpsSample=now;
+  else if(now-lastFpsSample>=1200){
+    const fps=Math.round(frameSamples*1000/(now-lastFpsSample));
+    const qualityName=graphicsQuality.select.selectedOptions[0]?.textContent||'3D';
+    if($('fps'))$('fps').textContent=`${fps} FPS · ${qualityName}`;
+    frameSamples=0;lastFpsSample=now;
+  }
 }
 walk.addEventListener('lock',()=>{started=true;document.body.classList.add('walk-active');$('crosshair').classList.add('visible');$('status').textContent='WASD: caminar · Shift: correr · E: puertas/ascensor · 1–8: elegir piso · F: PC · Tab: escenarios · Esc: mouse';});
 walk.addEventListener('unlock',()=>{document.body.classList.remove('walk-active');$('crosshair').classList.remove('visible');$('walk-tooltip').classList.remove('visible');keys.clear();velocity.set(0,0,0);});
