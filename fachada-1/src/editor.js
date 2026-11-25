@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { buildPiramideSENATI } from './piramide-senati.js';
+import {mountGraphicsQuality} from './calidad-grafica.js';
 import { isDefaultEntrancePerson, isOldFrontExitSign } from './exterior-campus.js';
 import { insideFootprint, canCrossBuilding, canOccupyPyramidInterior } from './exterior-navigation.js';
 import {EV52_ROOMS,ev52DeskPositions,pyramidScale,DEFAULT_PYRAMID_WIDTH,DEFAULT_PYRAMID_DEPTH,DEFAULT_LEVEL_HEIGHT} from './ev52-layout.js';
@@ -28,6 +29,7 @@ const $ = (id) => document.getElementById(id);
 const viewport = $('viewport');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeaf0f7);
+scene.fog=new THREE.Fog(0xeaf0f7,180,365);
 
 const camera = new THREE.PerspectiveCamera(45, 1, .1, 500);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -61,6 +63,9 @@ sun.shadow.mapSize.set(2048, 2048);
 scene.add(sun);
 const fill = new THREE.DirectionalLight(0xb6d6ff, .8);
 fill.position.set(12, 10, -12); scene.add(fill);
+mountGraphicsQuality({container:document.querySelector('.right-panel .options-card'),renderer,sun,scene,shadowRadius:56,
+  onChange:()=>{const a=$('opt-shadows');if(a)a.checked=renderer.shadowMap.enabled;
+    const b=$('opt-realistic');if(b)b.checked=true;}});
 
 const roomGroup = new THREE.Group(); roomGroup.name = 'Room'; scene.add(roomGroup);
 const objectGroup = new THREE.Group(); objectGroup.name = 'PlacedObjects'; scene.add(objectGroup);
@@ -345,6 +350,7 @@ function applyClimate(mode){
  appearance.climate=mode||'day';
  const night=appearance.climate==='night',rain=appearance.climate==='rain';
  scene.background=new THREE.Color(night?0x101a30:(rain?0x8998aa:0xb9d8f3));
+ if(scene.fog)scene.fog.color.copy(scene.background);
  hemi.intensity=night?.42:(rain?.95:1.65);
  sun.intensity=night?.12:(rain?.72:2.25);
  fill.intensity=night?.22:(rain?.42:.8);
