@@ -30,14 +30,14 @@ footer{color:var(--muted);font-size:13px;line-height:1.6;margin-top:18px}
     <label>Altura por planta <output id="outHeight">3,8 m</output><input id="height" type="range" min="3" max="5" step=".1" value="3.8"></label>
   </div>
   <p class="note">Estos controles muestran una vista previa: para aplicar dimensiones al edificio 3D, utiliza <b>Editor → Ancho / Largo / Altura → Aplicar dimensiones</b>. Ninguna cifra corresponde a mediciones certificadas de la sede real.</p>
-  <div class="diagram"><svg id="plant" viewBox="0 0 1200 680" role="img" aria-label="Esquema de distribución con 10 ambientes, dos baños, seis espacios de apoyo, dos escaleras y dos ascensores"></svg></div>
-  <p class="note">Los accesos de cada sala están abiertos en el croquis virtual. Planta baja interpretada de la imagen facilitada; las plantas 2–6 repiten el esquema para alinear sus núcleos. Usos y medidas sin confirmar.</p>
+  <div class="diagram"><svg id="plant" viewBox="0 0 1200 680" role="img" aria-label="Esquema de distribución con 10 aulas, dos baños, vestíbulo, dos escaleras y dos ascensores"></svg></div>
+  <p class="note">Los accesos de cada sala están abiertos en el croquis virtual. Los seis pisos reutilizan una planta modular propuesta para el proyecto; no representa los planos reales de SENATI.</p>
 </section>
 <section class="panel"><h2>Medidas orientativas calculadas</h2><div class="stats" id="stats"></div><div class="rooms" id="rooms"></div></section>
 <footer>Maqueta educativa: no usar para estimar aforo, verificar evacuación, accesibilidad, estructuras o medidas de construcción. El ascensor del recorrido cambia de planta de forma simulada.</footer>
 </main>
 <script type="module">
-import {EV52_ROOMS,EV52_WALL_SEGMENTS,EV52_DOORS,EV52_STAIRWELLS,EV52_ELEVATORS,EV52_BATHROOMS,EV52_SUPPORT_ROOMS,getPyramidDimensions} from './assets/ev52-layout-public.js';
+import {EV52_ROOMS,EV52_WALL_SEGMENTS,EV52_DOORS,EV52_STAIRWELLS,EV52_ELEVATORS,EV52_BATHROOMS,getPyramidDimensions} from './assets/ev52-layout-public.js';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const svg=$('plant');
 const svgNode=(tag,attrs={},text)=>{const el=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;return el;};
@@ -69,7 +69,6 @@ function draw(){
   for(let n=1;n<10;n++)svg.append(svgNode('line',{x1:X(st.xMin),x2:X(st.xMax),y1:Z(st.zTop+(st.zBottom-st.zTop)*n/10),y2:Z(st.zTop+(st.zBottom-st.zTop)*n/10),stroke:'#b86c33','stroke-width':1}));
   svg.append(svgNode('text',{x:X(st.x),y:Z(st.zTop)-7,'font-size':12,'text-anchor':'middle','font-weight':700,fill:'#934c20'},`ESC. ${i+1}`));
  }
- for(const a of EV52_SUPPORT_ROOMS){svg.append(pt(a.x0,a.z0,a.x1,a.z1,{fill:'#e5e3ef',stroke:'none'}));svg.append(svgNode('text',{x:X((a.x0+a.x1)/2),y:Z((a.z0+a.z1)/2),'font-size':10,'text-anchor':'middle',fill:'#4c4168'},a.id));}
  for(const wc of EV52_BATHROOMS){
    svg.append(pt(wc.x0,wc.z0,wc.x1,wc.z1,{fill:'#c7e6e9',stroke:'none'}));
    svg.append(svgNode('text',{x:X((wc.x0+wc.x1)/2),y:Z((wc.z0+wc.z1)/2),'font-size':12,'text-anchor':'middle','font-weight':700,fill:'#17677b'},wc.label));

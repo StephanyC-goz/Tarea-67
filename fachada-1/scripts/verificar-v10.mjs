@@ -5,7 +5,7 @@ import { dirname,resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   EV52_WALL_SEGMENTS, EV52_ROOMS, EV52_DOORS,
-  EV52_STAIRWELLS, EV52_ELEVATOR, EV52_ELEVATORS, EV52_BATHROOMS, EV52_SUPPORT_ROOMS, ev52DeskPositions,
+  EV52_STAIRWELLS, EV52_ELEVATOR, EV52_ELEVATORS, EV52_BATHROOMS, ev52DeskPositions,
   getPyramidDimensions, pyramidScale,
   DEFAULT_PYRAMID_WIDTH, DEFAULT_PYRAMID_DEPTH, DEFAULT_LEVEL_HEIGHT
 } from '../src/ev52-layout.js';
@@ -16,13 +16,13 @@ assert.equal(DEFAULT_PYRAMID_DEPTH,38);
 assert.equal(DEFAULT_LEVEL_HEIGHT,3.8);
 assert.equal(EV52_ROOMS.length,10,'Diez ambientes independientes');
 assert.equal(EV52_STAIRWELLS.length,2,'Dos núcleos de escalera');
-assert.equal(EV52_DOORS.length,EV52_ROOMS.length+EV52_BATHROOMS.length+EV52_SUPPORT_ROOMS.length,'Una puerta por aula y baño');
+assert.equal(EV52_DOORS.length,EV52_ROOMS.length+EV52_BATHROOMS.length,'Una puerta por aula y baño');
 assert(EV52_WALL_SEGMENTS.length>=50&&EV52_WALL_SEGMENTS.length<90,'Trazado modular simplificado');
-assert.equal(ev52DeskPositions().length,36,'36 escritorios didácticos, cuatro por ambiente equipado');
+assert.equal(ev52DeskPositions().length,40,'40 escritorios didácticos, cuatro por aula');
 assert.equal(EV52_BATHROOMS.length,2);
 assert.equal(EV52_ELEVATORS.length,2);
 const cores=[...EV52_STAIRWELLS,...EV52_ELEVATORS].map(c=>({x0:c.xMin,x1:c.xMax,z0:c.zTop,z1:c.zBottom}));
-const zones=[...EV52_ROOMS,...EV52_BATHROOMS,...EV52_SUPPORT_ROOMS,...cores];
+const zones=[...EV52_ROOMS,...EV52_BATHROOMS,...cores];
 for(let i=0;i<zones.length;i++)for(let j=i+1;j<zones.length;j++){
   const a=zones[i],b=zones[j];
   assert(!(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1e-6&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>1e-6),'Los recintos y núcleos no se superponen');
@@ -85,4 +85,4 @@ console.log(`Ejemplo aula N3: ${m.exampleClassroom.width.toFixed(2)}×${m.exampl
 // Guardar referencia física de puertas, escaleras y elevador (metros).
 assert(Math.abs((EV52_DOORS[0].x - EV52_ROOMS[0].x0) - (EV52_ROOMS[0].x1-EV52_ROOMS[0].x0)/2)<1e-8);
 assert(m.elevator.depth>2 && m.elevator.depth<3);
-assert(m.staircase.length>=6 && m.staircase.length<8);
+assert(m.staircase.length>7 && m.staircase.length<8);

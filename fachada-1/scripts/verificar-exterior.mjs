@@ -120,7 +120,7 @@ console.log('Exterior OK: puerta lateral operativa y recorrido 1–7 continuo en
 assert.equal(current.rooms.length,10);
 assert.equal(current.bathrooms.length,2);
 assert.equal(current.elevators.length,2);
-assert.equal(current.classroomDoors.length,108);assert.equal(current.supportRooms.length,6);
+assert.equal(current.classroomDoors.length,72);
 assert.equal(current.floorWallBoxes.length,6);
 assert(current.floorWallBoxes.every(w=>w.length===current.floorWallBoxes[0].length));
-console.log('Interior modular: seis plantas, 10 ambientes, seis zonas de apoyo, dos baños, dos ascensores y dos escaleras por planta.');
+console.log('Interior modular: seis plantas, 10 aulas, dos baños, dos ascensores y dos escaleras por planta.');
