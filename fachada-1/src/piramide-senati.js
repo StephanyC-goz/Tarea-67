@@ -205,7 +205,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
 
   // El extremo de la plaza tiene dos masas de concreto y un cuerpo central retirado.
   const entryX = walkBounds.left;
-  const westX = entryX-X(3.2); // Reduce el saliente del volumen frontal sin mover la puerta.
+  const westX = Math.min(entryX-X(.85),mainLeft-X(.12)); // Paños frontales unidos a los laterales, sin bloque saliente.
   const recessStart = Z(-3.25);
   const recessEnd = Z(10.6);
   const westSpan = recessEnd-recessStart;
@@ -222,8 +222,8 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const frontConcrete = standard(new THREE.Color(facadeColor).multiplyScalar(.79),.94);
   frontConcrete.map = concrete.map;
   const frontBlue = standard(new THREE.Color(signColor).multiplyScalar(.58),.72);
-  const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[Math.min(recessStart-Z(2),outerFace(-1,height)+Z(2.1)),height+.21]];
-  const frontWing = [[recessEnd,0],[wallFront,0],[Math.max(recessEnd+Z(1.8),outerFace(1,height)-Z(1.7)),height-levelHeight*.82],[recessEnd,height-levelHeight*.82]];
+  const rearWing = [[wallBack,0],[recessStart,0],[recessStart,height+.21],[Math.min(recessStart-Z(2),outerFace(-1,height)-Z(.16)),height+.21]];
+  const frontWing = [[recessEnd,0],[wallFront,0],[Math.max(recessEnd+Z(1.8),outerFace(1,height-levelHeight*.82)+Z(.16)),height-levelHeight*.82],[recessEnd,height-levelHeight*.82]];
   sideVolume(envelope,'Muro lateral de concreto junto a la entrada',westX,entryX+.10,rearWing,frontConcrete);
   sideVolume(envelope,'Volumen inclinado a la derecha de la entrada',westX,entryX+.10,frontWing,frontConcrete);
   obstacles.push({x0:westX,x1:entryX,z0:wallBack,z1:recessStart},{x0:westX,x1:entryX,z0:recessEnd,z1:wallFront});
@@ -298,15 +298,15 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   const ledgeY = [canopyY,levelHeight*1.72,levelHeight*3.52,levelHeight*4.48];
   for (const y of ledgeY) {
     if (y>=height-.55) continue;
-    if (y>levelHeight*2.5) {
-      box(balcony,1.9,.34,westSpan,entryX-.86,y,westCenter,frontConcrete);
-      box(balcony,1.92,.065,westSpan,entryX-.86,y-.20,westCenter,white);
+    if (y===canopyY || y>levelHeight*2.5) {
+      box(balcony,recessDepth+.12,.30,westSpan,westX+(recessDepth-.12)/2,y,westCenter,frontConcrete);
+      box(balcony,recessDepth+.12,.055,westSpan,westX+(recessDepth-.12)/2,y-.18,westCenter,white);
       continue;
     }
-    box(balcony,recessDepth+.75,.63,westSpan,westX+(recessDepth-.75)/2,y,westCenter,concrete);
-    box(balcony,recessDepth+.68,.10,westSpan,westX+(recessDepth-.68)/2,y-.36,westCenter,white);
-    box(balcony,.31,.55,westSpan,westX-.57,y+.49,westCenter,concrete);
-    const railingX = westX-.58;
+    box(balcony,recessDepth+.12,.45,westSpan,westX+(recessDepth-.12)/2,y,westCenter,concrete);
+    box(balcony,recessDepth+.12,.06,westSpan,westX+(recessDepth-.12)/2,y-.255,westCenter,white);
+    box(balcony,.31,.55,westSpan,westX+.08,y+.49,westCenter,concrete);
+    const railingX = westX+.08;
     for (const railY of [y+.84,y+1.05]) beam(balcony,[railingX,railY,recessStart+.12],[railingX,railY,recessEnd-.12],.024,aluminum);
     for (let post=0;post<=8;post++) {
       const z = recessStart+.12+(westSpan-.24)*post/8;
@@ -335,8 +335,8 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
   }
   const cantileverHeight = Math.min(3.4,levelHeight*.9);
   const cantileverY = height-cantileverHeight/2+.12;
-  box(envelope,recessDepth+1.64,cantileverHeight,westSpan-.11,westX+(recessDepth-1.64)/2,cantileverY,westCenter,white);
-  for (let seam=1;seam<13;seam++) box(envelope,.018,cantileverHeight-.07,.022,westX-1.65,cantileverY,recessStart+westSpan*seam/13,trim,false);
+  box(envelope,recessDepth+.48,cantileverHeight,westSpan-.11,westX+(recessDepth-.48)/2,cantileverY,westCenter,white);
+  for (let seam=1;seam<13;seam++) box(envelope,.018,cantileverHeight-.07,.022,westX-.49,cantileverY,recessStart+westSpan*seam/13,trim,false);
 
 
   (function addReferenceFacade(group, walls, put, rod, mat, sx, sz, H, lh, west, entry, left, right, rear, fore, rearProfile, frontProfile, cement, metal, light) {
@@ -365,7 +365,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     const levels=[lh*1.92,lh*2.52,lh*3.12,lh*3.82];
     levels.forEach((yy,index)=>{
       if(yy>H-.8)return;
-      const run=sx(2.1-index*.24);
+      const run=Math.max(sx(.12),Math.min(sx(2.1-index*.24),entry-west-.04));
       put(detail,run,.24,sz(1.08),entry-run/2,yy,left+sz(.54),cement);
       put(detail,run,.065,sz(1.08),entry-run/2,yy-.16,left+sz(.54),light,false);
     });
@@ -394,7 +394,7 @@ function buildPyramidExterior({shell,envelope,structure,roof,width,depth,levelHe
     box(shell,.096,.83,2.2,mainRight+1.3,y,front-1.20,windowTones[floor%4],false);
     box(shell,.28,.23,2.64,mainRight+1.26,y+.59,front-1.20,white);
   }
-  const roofLeft=westX+.02, roofRight=mainRight+1.35;
+  const roofLeft=entryX-.06, roofRight=mainRight+1.35;
   box(roof,roofRight-roofLeft,.45,front-back+.35,(roofLeft+roofRight)/2,height+.15,(front+back)/2,spandrel);
 
   return {
